@@ -1,0 +1,26 @@
+package trax.aero.pojo;
+
+import java.util.ArrayList;
+
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement(name = "MT_TRAX_I6_TRAX", namespace = "http://singaporeair.com/mro/ESDTRAX")
+@XmlAccessorType(XmlAccessType.FIELD)
+public class INT6_TRAX {
+	
+	 @XmlElement(name = "ORDER")
+	    private ArrayList<OrderTRAX> order;
+
+	    
+	    public ArrayList<OrderTRAX> getOrder() {
+	        return order;
+	    }
+
+	    public void setOrder(ArrayList<OrderTRAX> order) {
+	        this.order = order;
+	    }
+
+}
