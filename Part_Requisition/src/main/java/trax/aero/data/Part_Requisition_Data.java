@@ -77,12 +77,16 @@ public class Part_Requisition_Data {
 		String sqlPR = "UPDATE REQUISITION_DETAIL SET PR_NO = ? AND PR_ITEM = ? WHERE REQUISITION = ? AND REQUISITION_LINE = ?";
 		String sqlUpdateREQD = "UPDATE REQUISITION_DETAIL SET STATUS = 'CLOSED' WHERE REQUISITION = ? AND REQUISITON_LINE = ? AND PR_NO IS NOT NULL AND PR_ITEM IS NOT NULL";
 		String sqlUpdateREQH = "UPDATE REQUISITION_HEADER RH SET RH.STATUS = 'CLOSED' WHERE RH.REQUISITION IN (SELECT RD.REQUISITION FROM RD.REQUISITION WHERE RD.PR_NO IS NOT NULL AND RD.PR_ITEM IS NOT NULL GROUP BY RD.REQUISITION HAVING COUNT(*) = COUNT(CASE WHEN RD.STATUS = 'CLOSED' THEN 1 END))";
+		String sqlCheckWOStatus = "SELECT W.STATUS FROM WO W, REQUISITION_HEADER R WHERE R.REQUISITION = ? and W.WO = R.WO";
+		String sqlUpdateReqStatus = "UPDTE REQUISITION_HEADER SET STATUS = 'CLOSED' WHERE REQUISITION = ?";
 		
 		try(PreparedStatement pstmt1 = con.prepareStatement(sqlDate);
 			PreparedStatement pstmt2 = con.prepareStatement(sqlDate2);
 			PreparedStatement pstmt3 = con.prepareStatement(sqlPR);
 			PreparedStatement pstmt4 = con.prepareStatement(sqlUpdateREQD);
-		    PreparedStatement pstmt5 = con.prepareStatement(sqlUpdateREQH)){
+		    PreparedStatement pstmt5 = con.prepareStatement(sqlUpdateREQH);
+			PreparedStatement pstmt6 = con.prepareStatement(sqlCheckWOStatus);
+			PreparedStatement pstmt7 = con.prepareStatement(sqlUpdateReqStatus)){
 			
 			for(INT13_TRAX r: request) {
 				if(r != null) {
@@ -109,6 +113,13 @@ public class Part_Requisition_Data {
 					
 					pstmt5.executeUpdate();
 					
+					pstmt6.setString(1, r.getRequisition());
+					ResultSet rs = pstmt6.executeQuery();
+					if(rs.next() && "CLOSED".equalsIgnoreCase(rs.getString(1))) {
+						pstmt7.setString(1, r.getRequisition());
+						pstmt7.executeUpdate();
+					}
+					
 					if (!r.getExceptionId().equalsIgnoreCase("53")) {
 						executed = "Request PR number: " + r.getPRnumber() + ", Error Code: " + r.getPRitem() + ", Error Code: " + r.getExceptionId() + ", Remarks: " + r.getExceptionDetail();
 						Part_Requisition_Controller.addError(executed);
@@ -125,6 +136,7 @@ public class Part_Requisition_Data {
 		
 		return executed;
 	}
+	
 	
 	public ArrayList<INT13_SND> getRequisiton() throws Exception{
 		executed = "OK";
@@ -194,11 +206,14 @@ public class Part_Requisition_Data {
 		    		  
 		    		  InboundC.setMaterialPartNumber(rs1.getString(3));
 		    		  InboundC.setWoSN(rs1.getString(4));
+		    		  InboundC.setQuantity(rs1.getString(5));
+		    		  InboundC.setPRnumber(rs1.getString(10));
+		    		  InboundC.setPRitem(rs1.getString(11));	
 		    		  
+		    		  list.add(req);
 		    	  }
 		      }
-		      
-		      
+     
 		} catch (Exception e) {
 		      e.printStackTrace();
 		      executed = e.toString();
