@@ -73,9 +73,19 @@ public class Run implements Runnable{
 
 	            try {
 	              String body = poster.getBody();
+	              
+	              if(body == null || body.trim().isEmpty()) {
+                      logger.severe("Received empty XML response");
+                      throw new Exception("Empty XML response");
+                  }
+	              
 	              StringReader sr = new StringReader(body);
+	              logger.info("Raw XML data: " + body);
 	              jc = JAXBContext.newInstance(INT6_TRAX.class);
+	              String xmlDeclaration = body.split("\\s+", 3)[0];
+	              logger.info("XML Declaration: " + xmlDeclaration);
 	              Unmarshaller unmarshaller = jc.createUnmarshaller();
+	              
 	              input = (INT6_TRAX) unmarshaller.unmarshal(sr);
 
 	              marshaller = jc.createMarshaller();

@@ -11,6 +11,7 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 
 import trax.aero.logger.LogManager;
+import trax.aero.utils.Run;
 
 @Startup
 @Singleton

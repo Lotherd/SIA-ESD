@@ -5,6 +5,8 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.net.ssl.SSLContext;
@@ -33,6 +35,8 @@ public class Poster {
 	final String Password = System.getProperty("Post_Password");
 	Logger logger = LogManager.getLogger("ImportTC_MHR");
 	private String body = null;
+	
+	private Map<String, String> requestStates = new HashMap<>();
 	
 	public boolean post(INT6_SND data, String URL) {
 		{
@@ -65,14 +69,21 @@ public class Poster {
 					builder = builder.header(HttpHeaders.AUTHORIZATION, "Basic "+ new String(Base64.getEncoder().encode(auth.getBytes())));
 					
 					String requests = "";
+				
 					
 					for(OrderSND r : data.getOrder()) {
 						for(OperationSND req : r.getOperations()) {
 							requests = requests +" (Task Card: " +req.getTcNumber() +", WO: " +r.getTraxWO() + "),";
 						}
 					}
+					String requestKey = URL + data.hashCode();
+					if ("accepted".equals(requestStates.get(requestKey))) {
+		                logger.info("Request already accepted, skipping: " + requests);
+		                return true; 
+		            }
+					
 					logger.info("POSTING Requests: " + requests + "to URL: " +url);
-					body = null;
+			
 					
 					JAXBContext jc = JAXBContext.newInstance(INT6_SND.class);
 		            Marshaller marshaller = jc.createMarshaller();
@@ -86,10 +97,11 @@ public class Poster {
 					body = response.readEntity(String.class);
 					logger.info("Response: " + response.getStatus() + " Response Body: " + body);
 					
-					if(response.getStatus() == 200 || response.getStatus() == 202) {
-						return true;
-					}
-					body = null;
+					if (response.getStatus() == 200 || response.getStatus() == 202) {
+		                requestStates.put(requestKey, "accepted");
+		                return true;
+		            }
+					
 					return false;
 				} catch (Exception exc) {
 					logger.severe(exc.toString());
