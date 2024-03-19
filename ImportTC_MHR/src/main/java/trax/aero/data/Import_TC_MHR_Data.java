@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.persistence.EntityManager;
@@ -23,6 +24,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 import javax.persistence.Persistence;
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
 
 import org.eclipse.yasson.internal.Unmarshaller;
 
@@ -97,6 +99,21 @@ public class Import_TC_MHR_Data {
 	    return con;
 	  }
 	  
+	  public String markSendData() throws JAXBException
+		{
+		  INT6_TRAX request = new INT6_TRAX();
+		  try {
+		        markTransaction(request);
+		        logger.info("markTransaction completed successfully.");
+		        return "OK";
+		    } catch (Exception e) {
+		    	logger.log(Level.SEVERE, "Error executing markTransaction", e);
+		    	e.printStackTrace();
+		        return null; 
+		    }
+		}
+	  
+	  
 	  public String markTransaction(INT6_TRAX request) {
 		    executed = "OK";
 
@@ -145,11 +162,11 @@ public class Import_TC_MHR_Data {
 	    String sqlTaskCard =
 	      "SELECT REFERENCE_TASK_CARD,TASK_CARD_DESCRIPTION,PRIORITY,WO,TASK_CARD,STATUS,\r\n" +
 	      "(SELECT W.RFO_NO FROM WO W WHERE W.WO = WO_TASK_CARD.WO AND W.MODULE = 'SHOP' AND WO_TASK_CARD.INTERFACE_FLAG is not null \r\n" +
-	      "AND (WO_TASK_CARD.non_routine = 'N' OR WO_TASK_CARD.non_routine = 'Y' OR WO_TASK_CARD.non_routine IS NULL)) as ESD_RFO \r\n" +
-	      "FROM WO_TASK_CARD WHERE INTERFACE_TRANSFERRED_DATE IS NULL AND (REFERENCE_TASK_CARD IS NOT NULL  OR \r\n" +
-	      "1=(SELECT count(*) FROM WO W WHERE W.WO = WO_TASK_CARD.WO AND W.MODULE = 'SHOP' AND WO_TASK_CARD.INTERFACE_FLAG is not null AND W.RFO_NO is not null \r\n" +
+	      "AND (WO_TASK_CARD.non_routine = 'N' OR WO_TASK_CARD.non_routine = 'Y' OR WO_TASK_CARD.non_routine IS NULL) AND w.rfo_no IS NOT NULL) as ESD_RFO \r\n" +
+	      "FROM WO_TASK_CARD WHERE INTERFACE_TRANSFERRED_DATE IS NULL AND (1=(SELECT count(*) FROM WO W \r\n" +
+	      "WHERE W.WO = WO_TASK_CARD.WO AND W.MODULE = 'SHOP' AND WO_TASK_CARD.INTERFACE_FLAG is not null AND W.RFO_NO is not null \r\n" +
 	      "AND (WO_TASK_CARD.non_routine = 'N' OR WO_TASK_CARD.non_routine = 'Y' OR WO_TASK_CARD.non_routine IS NULL)))  \r\n" +
-	      "AND (non_routine = 'N' OR non_routine = 'Y' OR non_routine IS NULL) ";
+	      "AND (non_routine = 'N' OR non_routine = 'Y' OR non_routine IS NULL) AND EXISTS (SELECT 1 FROM wo w WHERE w.wo = wo_task_card.wo AND w.module = 'SHOP' AND w.rfo_no IS NOT NULL) \r\n" ;
 
 	    if (MaxRecord != null && !MaxRecord.isEmpty()) {
 	      sqlTaskCard = "SELECT *	FROM (" + sqlTaskCard;
@@ -171,6 +188,8 @@ public class Import_TC_MHR_Data {
 	    
 	    String sqlCategory = 
 		    	" SELECT WO_CATEGORY FROM WO WHERE WO =?";
+	    
+	    String sqlMark = "UPDATE WO_TASK_CARD SET INTERFACE_FLAG = null WHERE INTERFACE_TRANSFERRED_DATE IS NULL AND TASK_CARD = ? AND WO = ?";
 
 	    PreparedStatement pstmt1 = null;
 	    ResultSet rs1 = null;
@@ -186,6 +205,9 @@ public class Import_TC_MHR_Data {
 	    
 	    PreparedStatement pstmt5 = null;
 	    ResultSet rs5 = null;
+	    
+	    PreparedStatement pstmt6 = null;
+	    ResultSet rs6 = null;
 
 
 	    try {
@@ -194,6 +216,7 @@ public class Import_TC_MHR_Data {
 	      pstmt3 = con.prepareStatement(sqlWork);
 	      pstmt4 = con.prepareStatement(sqlStatus);
 	      pstmt5 = con.prepareStatement(sqlCategory);
+	      pstmt6 = con.prepareStatement(sqlMark);
 
 	      if (MaxRecord != null && !MaxRecord.isEmpty()) {
 	        pstmt1.setString(1, MaxRecord);
@@ -346,6 +369,13 @@ public class Import_TC_MHR_Data {
 	          if (rs2 != null && !rs2.isClosed()) 
 	        	  rs2.close();
 	          //list.add(req);
+	          
+	          pstmt6.setString(1, InboundItem.getTcNumber());
+	          pstmt6.setString(2, Inbound.getTraxWO());
+	          
+	          pstmt6.executeQuery();
+	         
+	          
 	        }
 	       
 	      }

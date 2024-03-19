@@ -23,7 +23,7 @@ public class Run implements Runnable{
 	// Variables
 	  Import_TC_MHR_Data data = null;
 	  final String url = System.getProperty("ImportTcMhr_URL");
-	  final int MAX_ATTEMPTS = 3;
+	  final int MAX_ATTEMPTS = 1;
 	  Logger logger = LogManager.getLogger("ImportTC_MHR");
 
 	  public Run() {
@@ -37,6 +37,7 @@ public class Run implements Runnable{
 	    try {
 	      //loop
 	      ArrayReq = data.getTaskCards();
+	      String markSendResult;
 	      boolean success = false;
 
 	      if (!ArrayReq.isEmpty()) {
@@ -54,10 +55,11 @@ public class Run implements Runnable{
 	          logger.info("Output: " + sw.toString());
 
 	          for (int i = 0; i < MAX_ATTEMPTS; i++) {
-	            success = poster.post(ArrayRequest, url);
-	            if (success) {
-	              break;
-	            }
+	        	  markSendResult = data.markSendData();
+	        	  if ("OK".equals(markSendResult)) {
+	            success = true;
+	            break;
+	        	  }
 	          }
 	          if (!success) {
 	            logger.severe("Unable to send XML " + " to URL " + url);
