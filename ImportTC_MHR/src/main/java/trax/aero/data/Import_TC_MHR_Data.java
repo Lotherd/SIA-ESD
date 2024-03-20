@@ -137,8 +137,8 @@ public class Import_TC_MHR_Data {
 		                        pstmt3.executeUpdate();
 		                    }
 
-		                    if (!o.getExceptionId().equalsIgnoreCase("53")) {
-		                        executed = "Request SAP Order Number: " + r.getRfoNo() + ", Error Code: " + o.getExceptionId() + ", Remarks: " + o.getExceptionDetail() + ", Operation Number: " + o.getOpsNo();
+		                    if (!r.getExceptionId().equalsIgnoreCase("53")) {
+		                        executed = "Request SAP Order Number: " + r.getRfoNo() + ", Error Code: " + r.getExceptionId() + ", Remarks: " + r.getExceptionDetail() + ", Operation Number: " + o.getOpsNo();
 		                        Import_TC_MHR_Controller.addError(executed);
 		                    }
 		                }

@@ -20,6 +20,20 @@
                                 </xsd:restriction>
                             </xsd:simpleType>
                         </xsd:element>
+                        <xsd:element name="EXCEPTION_ID" minOccurs="1">
+                             <xsd:simpleType>
+                               <xsd:restriction base="xsd:string">
+                                   <xsd:maxLength value="10" />
+                               </xsd:restriction>
+                             </xsd:simpleType>
+                        </xsd:element>
+                        <xsd:element name="EXCEPTION_DETAIL" minOccurs="1">
+                             <xsd:simpleType>
+                               <xsd:restriction base="xsd:string">
+                                   <xsd:maxLength value="1000" />
+                               </xsd:restriction>
+                             </xsd:simpleType>
+                        </xsd:element>
                         <xsd:element name="OPERATION" maxOccurs="unbounded">
                             <xsd:complexType>
                                 <xsd:sequence>
@@ -34,20 +48,6 @@
                                         <xsd:simpleType>
                                             <xsd:restriction base="xsd:string">
                                                 <xsd:maxLength value="35" />
-                                            </xsd:restriction>
-                                        </xsd:simpleType>
-                                    </xsd:element>
-                                    <xsd:element name="EXCEPTION_ID" minOccurs="1">
-                                        <xsd:simpleType>
-                                            <xsd:restriction base="xsd:string">
-                                                <xsd:maxLength value="10" />
-                                            </xsd:restriction>
-                                        </xsd:simpleType>
-                                    </xsd:element>
-                                    <xsd:element name="EXCEPTION_DETAIL" minOccurs="1">
-                                        <xsd:simpleType>
-                                            <xsd:restriction base="xsd:string">
-                                                <xsd:maxLength value="1000" />
                                             </xsd:restriction>
                                         </xsd:simpleType>
                                     </xsd:element>

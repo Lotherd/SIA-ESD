@@ -160,10 +160,10 @@ public class Import_TC_MHR_Controller {
             email.setFrom(fromEmail);
             if (opsLineEmails.getFlag() != null && !opsLineEmails.getFlag().isEmpty() && (opsLineEmails.getFlag().equalsIgnoreCase("Y") || opsLineEmails.getFlag().equalsIgnoreCase("I"))) {
                 email.setSubject("Failure to update Import_TC_MHR WO: " + order.getWo() + " Task Card: " + operation.getTaskCard());
-                email.setMsg("TRAX WO Number: " + order.getWo() + " ,TRAX Task Card Number: " + operation.getTaskCard() + " ,Date & Time of Transaction: " + date + " ,SPA Order Number: " + order.getRfoNo() + " ,Operation Number: " + operation.getOpsNo() + " ,Error Code: " + operation.getExceptionId() + " ,Remarks: " + operation.getExceptionDetail());
+                email.setMsg("TRAX WO Number: " + order.getWo() + " ,TRAX Task Card Number: " + operation.getTaskCard() + " ,Date & Time of Transaction: " + date + " ,SPA Order Number: " + order.getRfoNo() + " ,Operation Number: " + operation.getOpsNo() + " ,Error Code: " + order.getExceptionId() + " ,Remarks: " + order.getExceptionDetail());
             } else {
                 email.setSubject("Failure to update Order Details WO: " + order.getWo() + " Task Card: " + operation.getTaskCard());
-                email.setMsg("TRAX WO Number: " + order.getWo() + " ,TRAX Task Card Number: " + operation.getTaskCard() + " ,Date & Time of Transaction: " + date + " ,SPA Order Number: " + order.getRfoNo() + " ,Operation Number: " + operation.getOpsNo() + " ,Error Code: " + operation.getExceptionId() + " ,Remarks: " + operation.getExceptionDetail());
+                email.setMsg("TRAX WO Number: " + order.getWo() + " ,TRAX Task Card Number: " + operation.getTaskCard() + " ,Date & Time of Transaction: " + date + " ,SPA Order Number: " + order.getRfoNo() + " ,Operation Number: " + operation.getOpsNo() + " ,Error Code: " + order.getExceptionId() + " ,Remarks: " + order.getExceptionDetail());
             }
             for (String emails: emailsList) {
                 if (opsLineEmails.getEmail() == null || opsLineEmails.getEmail().isEmpty() || opsLineEmails.getEmail().equalsIgnoreCase("ERROR")) {

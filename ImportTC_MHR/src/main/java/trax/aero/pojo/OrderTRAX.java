@@ -16,8 +16,15 @@ public class OrderTRAX {
     @XmlElement(name = "RFO_NO")
     private String rfoNo;
 
+    @XmlElement(name = "EXCEPTION_ID")
+    private String exceptionId;
+
+    @XmlElement(name = "EXCEPTION_DETAIL")
+    private String exceptionDetail;
+
     @XmlElement(name = "OPERATION")
     private List<OperationTRAX> operations;
+    
 
 	public String getWo() {
 		return wo;
@@ -33,6 +40,22 @@ public class OrderTRAX {
 
 	public void setRfoNo(String rfoNo) {
 		this.rfoNo = rfoNo;
+	}
+	
+	public String getExceptionId() {
+		return exceptionId;
+	}
+
+	public void setExceptionId(String exceptionId) {
+		this.exceptionId = exceptionId;
+	}
+
+	public String getExceptionDetail() {
+		return exceptionDetail;
+	}
+
+	public void setExceptionDetail(String exceptionDetail) {
+		this.exceptionDetail = exceptionDetail;
 	}
 
 	public List<OperationTRAX> getOperations() {

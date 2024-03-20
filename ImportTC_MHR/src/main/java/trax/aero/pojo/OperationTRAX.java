@@ -13,12 +13,6 @@ public class OperationTRAX {
     @XmlElement(name = "TASK_CARD")
     private String taskCard;
 
-    @XmlElement(name = "EXCEPTION_ID")
-    private String exceptionId;
-
-    @XmlElement(name = "EXCEPTION_DETAIL")
-    private String exceptionDetail;
-
 	public String getOpsNo() {
 		return opsNo;
 	}
@@ -33,22 +27,6 @@ public class OperationTRAX {
 
 	public void setTaskCard(String taskCard) {
 		this.taskCard = taskCard;
-	}
-
-	public String getExceptionId() {
-		return exceptionId;
-	}
-
-	public void setExceptionId(String exceptionId) {
-		this.exceptionId = exceptionId;
-	}
-
-	public String getExceptionDetail() {
-		return exceptionDetail;
-	}
-
-	public void setExceptionDetail(String exceptionDetail) {
-		this.exceptionDetail = exceptionDetail;
 	}
 
 }
