@@ -76,10 +76,10 @@ public class Run implements Runnable{
 	            try {
 	              String body = poster.getBody();
 	              
-	              if(body == null || body.trim().isEmpty()) {
+	             /* if(body == null || body.trim().isEmpty()) {
                       logger.severe("Received empty XML response");
                       throw new Exception("Empty XML response");
-                  }
+                  }*/
 	              
 	              StringReader sr = new StringReader(body);
 	              logger.info("Raw XML data: " + body);

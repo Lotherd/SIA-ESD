@@ -160,13 +160,13 @@ public class Import_TC_MHR_Data {
 	    ArrayList<OrderSND> orlist = new ArrayList<OrderSND>();
 
 	    String sqlTaskCard =
-	      "SELECT REFERENCE_TASK_CARD,TASK_CARD_DESCRIPTION,PRIORITY,WO,TASK_CARD,STATUS,\r\n" +
+	      "SELECT REFERENCE_TASK_CARD,TASK_CARD_DESCRIPTION,PRIORITY,WO,TASK_CARD,(SELECT W.STATUS FROM WO W WHERE W.WO = WO_TASK_CARD.WO) AS STATUS,\r\n" +
 	      "(SELECT W.RFO_NO FROM WO W WHERE W.WO = WO_TASK_CARD.WO AND W.MODULE = 'SHOP' AND WO_TASK_CARD.INTERFACE_FLAG is not null \r\n" +
 	      "AND (WO_TASK_CARD.non_routine = 'N' OR WO_TASK_CARD.non_routine = 'Y' OR WO_TASK_CARD.non_routine IS NULL) AND w.rfo_no IS NOT NULL) as ESD_RFO \r\n" +
 	      "FROM WO_TASK_CARD WHERE INTERFACE_TRANSFERRED_DATE IS NULL AND (1=(SELECT count(*) FROM WO W \r\n" +
 	      "WHERE W.WO = WO_TASK_CARD.WO AND W.MODULE = 'SHOP' AND WO_TASK_CARD.INTERFACE_FLAG is not null AND W.RFO_NO is not null \r\n" +
 	      "AND (WO_TASK_CARD.non_routine = 'N' OR WO_TASK_CARD.non_routine = 'Y' OR WO_TASK_CARD.non_routine IS NULL)))  \r\n" +
-	      "AND (non_routine = 'N' OR non_routine = 'Y' OR non_routine IS NULL) AND EXISTS (SELECT 1 FROM wo w WHERE w.wo = wo_task_card.wo AND w.module = 'SHOP' AND w.rfo_no IS NOT NULL) \r\n" ;
+	      "AND (non_routine = 'N' OR non_routine = 'Y' OR non_routine IS NULL) AND EXISTS (SELECT 1 FROM wo w WHERE w.wo = wo_task_card.wo AND w.module = 'SHOP' AND w.rfo_no IS NOT NULL AND w.status = 'OPEN') \r\n" ;
 
 	    if (MaxRecord != null && !MaxRecord.isEmpty()) {
 	      sqlTaskCard = "SELECT *	FROM (" + sqlTaskCard;
@@ -177,7 +177,7 @@ public class Import_TC_MHR_Data {
 	    }
 
 	    String sqlItem =
-	      "SELECT WTI.OPS_NO, WT.MODIFIED_DATE FROM WO_TASK_CARD_ITEM WTI, WO_TASK_CARD WT WHERE WTI.WO = ? AND WTI.TASK_CARD = ? AND WT.WO = WTI.WO AND WT.TASK_CARD = WTI.TASK_CARD";
+	      "SELECT WTI.OPS_NO, WT.MODIFIED_DATE FROM WO_TASK_CARD_ITEM WTI, WO_TASK_CARD WT WHERE WTI.WO = ? AND WTI.TASK_CARD = ? AND WT.WO = WTI.WO AND WT.TASK_CARD = WTI.TASK_CARD AND ROWNUM = 1";
 
 	    String sqlWork =
 	     "SELECT COALESCE(SUM(NVL(man_hours, 0)), 0) AS total_man_hours, COALESCE(SUM(NVL(inspector_man_hours, 0)), 0) AS total_inspector_man_hours, COALESCE(SUM(NVL(man_hours, 0) * NVL(man_require, 0)), 0) + COALESCE(SUM(NVL(inspector_man_hours, 0) * NVL(inspector_man_require, 0)), 0) AS Total_Hours\r\n"
@@ -272,7 +272,7 @@ public class Import_TC_MHR_Data {
 	        	    logger.info("Category of the WO: " + rs5.getString(1));
 	        	    
 	        	    InboundItem.setTcCategory(rs5.getString(1));
-	  	          Inbound.getOperations().add(InboundItem);
+	  	          //Inbound.getOperations().add(InboundItem);
 	        	}else {
 	          if (rs5 != null && !rs5.isClosed()) {
 	        	    rs5.close();
@@ -297,15 +297,15 @@ public class Import_TC_MHR_Data {
 	        	    rs4.close();
 	        	}
 	          InboundItem.setDeletionIndicator(deletionIndicator);
-	          Inbound.getOperations().add(InboundItem);
+	          //Inbound.getOperations().add(InboundItem);
 
 
 	          pstmt2.setString(1, Inbound.getTraxWO());
 	          pstmt2.setString(2, InboundItem.getTcNumber());
 	          
-	          req.getOrder().add(Inbound);
-	          Inbound.getOperations().add(InboundItem);
-	          list.add(req);
+	        req.getOrder().add(Inbound);
+	        Inbound.getOperations().add(InboundItem);
+	        list.add(req);
 
 	          rs2 = pstmt2.executeQuery();
 	          
@@ -344,7 +344,7 @@ public class Import_TC_MHR_Data {
 	        	        if (rs3.next()) {
 	        	          logger.info("MECH HRS: " + rs3.getString(1) + " INSP HRS: " + rs3.getString(2) + " TOTAL HRS: " + rs3.getString(3));
 	        	          if (rs3.getString(1) != null && !rs3.getString(1).isEmpty()) {
-	        	            hours = hours + new BigDecimal(rs3.getString(3)).intValue();
+	        	           hours = hours + new BigDecimal(rs3.getString(3)).intValue();
 	        	          } // hrs check
 	        	        }
 	        	      }
@@ -362,20 +362,21 @@ public class Import_TC_MHR_Data {
 
 	        	      InboundItem.setStandardManHours(manHours);
 
-	        	      Inbound.getOperations().add(InboundItem);
+	        	     // Inbound.getOperations().add(InboundItem);
 	        	    }
 	        	  }
 	          
+	          
 	          if (rs2 != null && !rs2.isClosed()) 
 	        	  rs2.close();
-	          //list.add(req);
+	          
 	          
 	          pstmt6.setString(1, InboundItem.getTcNumber());
 	          pstmt6.setString(2, Inbound.getTraxWO());
 	          
 	          pstmt6.executeQuery();
 	         
-	          
+	         
 	        }
 	       
 	      }
