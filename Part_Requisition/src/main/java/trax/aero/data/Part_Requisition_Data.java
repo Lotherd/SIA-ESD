@@ -13,12 +13,14 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 import javax.persistence.Persistence;
+import javax.xml.bind.JAXBException;
 
 import trax.aero.controller.Part_Requisition_Controller;
 import trax.aero.exception.CustomizeHandledException;
@@ -78,6 +80,20 @@ public class Part_Requisition_Data {
 	
 	public Connection getCon() {
 		return con;
+	}
+	
+	public String markSendData() throws JAXBException
+	{
+	  List<INT13_TRAX> request = (List<INT13_TRAX>) new INT13_TRAX();
+	  try {
+	        markTransaction(request);
+	        logger.info("markTransaction completed successfully.");
+	        return "OK";
+	    } catch (Exception e) {
+	    	logger.log(Level.SEVERE, "Error executing markTransaction", e);
+	    	e.printStackTrace();
+	        return null; 
+	    }
 	}
 	
 	public String markTransaction(List<INT13_TRAX> request) {
@@ -152,14 +168,28 @@ public class Part_Requisition_Data {
 	public ArrayList<INT13_SND> getRequisiton() throws Exception{
 		executed = "OK";
 		
+		if (this.con == null || this.con.isClosed()) {
+	        try {
+	            this.con = DataSourceClient.getConnection(); 
+	            if (this.con == null || this.con.isClosed()) {
+	                throw new IllegalStateException("No se pudo restablecer la conexión a la base de datos.");
+	            }
+	            logger.info("Conexión a la base de datos restablecida exitosamente.");
+	        } catch (SQLException e) {
+	            throw new IllegalStateException("Error al restablecer la conexión a la base de datos.", e);
+	        }
+	    }
+		
 		ArrayList<INT13_SND> list = new ArrayList<INT13_SND>();
 		ArrayList<OrderSND> orlist = new ArrayList<OrderSND>();
 		ArrayList<OrderComponentSND> oclist = new ArrayList<OrderComponentSND>();
 		
-		String sqlRequisition ="SELECT DISTINCT RD.REQUISITION, RD.REQUISITION_LINE, RD.PN, WT.PN_SN, RD.QTY_REQUIRE, R.WO, R.TASK_CARD, W.LOCATION, \r\n" +
+		String sqlRequisition ="SELECT DISTINCT RD.REQUISITION, RD.REQUISITION_LINE, RD.PN, NULLIF( WT.PN_SN, '') AS SN, RD.QTY_REQUIRE, R.WO, R.TASK_CARD, W.LOCATION, \r\n" +
 							   "W.RFO_NO, WTI.OPS_NO, RD.PR_NO, RD.PR_ITEM, R.CREATED_BY FROM REQUISITION_DETAIL RD INNER JOIN REQUISITION_HEADER R ON R.REQUISITION = RD.REQUISITION \r\n" +
 							   "INNER JOIN WO W ON W.WO = R.WO INNER JOIN WO_TASK_CARD WT ON WT.WO = R.WO AND WT.TASK_CARD = R.TASK_CARD \r\n" +
-							   "INNER JOIN WO_TASK_CARD_ITEM WTI ON WTI.WO = R.WO AND WT.TASK_CARD = R.TASK_CARD WHERE WT.PN = RD.PN AND W.RFO_NO IS NOT NULL";
+							   "INNER JOIN WO_TASK_CARD_ITEM WTI ON WTI.WO = R.WO AND WT.TASK_CARD = R.TASK_CARD WHERE RD.STATUS = 'OPEN' AND R.INTERFACE_TRANSFERRED_DATE_ESD IS NULL AND W.RFO_NO IS NOT NULL";
+		
+		String sqlMark = "UPDATE REQUISITION_HEADER SET INTERFACE_TRANSFERRED_DATE_ESD = SYSDATE WHERE REQUISITION = ?";
 		
 		if (MaxRecord != null && !MaxRecord.isEmpty()) {
 			sqlRequisition = "SELECT * FROM (" + sqlRequisition;
@@ -171,9 +201,12 @@ public class Part_Requisition_Data {
 		
 		 PreparedStatement pstmt1 = null;
 		 ResultSet rs1 = null;
+		 PreparedStatement pstmt2 = null;
+		 ResultSet rs2 = null;
 		
 		try {
 			pstmt1 = con.prepareStatement(sqlRequisition);
+			pstmt2 = con.prepareStatement(sqlMark);
 			
 			if (MaxRecord != null && !MaxRecord.isEmpty()) {
 		        pstmt1.setString(1, MaxRecord);
@@ -183,7 +216,7 @@ public class Part_Requisition_Data {
 		      
 		      if(rs1 != null) {
 		    	  while(rs1.next()) {
-		    		  logger.info("Processing Requisition: " + rs1.getString(1) + ", Requisition Line: " + rs1.getString(2));
+		    		  logger.info("Processing Requisition: " + rs1.getString(1) + ", Requisition Line: " + rs1.getString(2) + ", RFO_NO: " + rs1.getString(9));
 		    		  INT13_SND req = new INT13_SND();
 		    		  orlist = new ArrayList<OrderSND>();
 		    		  req.setOrder(orlist);
@@ -191,6 +224,12 @@ public class Part_Requisition_Data {
 		    		  oclist = new ArrayList<OrderComponentSND>();
 		    		  Inbound.setComponents(oclist);
 		    		  OrderComponentSND InboundC = new OrderComponentSND();
+		    		  
+		    		  if (rs1.getString(9) != null && !rs1.getNString(9).isEmpty()) {
+		    		  Inbound.setOrderNO(rs1.getString(9));
+		    		  } else {
+		    			  Inbound.setOrderNO("");
+		    		  }
 		    		  
 		    		  if (rs1.getString(1) != null && !rs1.getNString(1).isEmpty()) {
 		    			  InboundC.setRequisition(rs1.getString(1));
@@ -204,28 +243,44 @@ public class Part_Requisition_Data {
 		    			  InboundC.setRequisitionLine("");
 		    		  }
 		    		  
+		    		  logger.info("OPS_NO: " + rs1.getString(10) + ", Created By " + rs1.getString(13) + ", Location: " + rs1.getString(8));
+		    		  
+		    		  
 		    		  InboundC.setGoodsRecipient(rs1.getString(13));
 		    		 
-		    		  if (rs1.getString(6) != null && rs1.getNString(6).isEmpty() && rs1.getString(8) != null && rs1.getNString(8).isEmpty()) {
-		    			  logger.info("Getting Task card: " + rs1.getString(6) + ", ESD RFO: " + rs1.getString(8) + ", Operation Number: " + rs1.getString(9));
+		    		  if (rs1.getString(6) != null && rs1.getNString(6).isEmpty() && rs1.getString(9) != null && rs1.getNString(9).isEmpty()) {
+		    			  logger.info("Getting Task card: " + rs1.getString(7) + ", ESD RFO: " + rs1.getString(9) + ", Operation Number: " + rs1.getString(10));
 		    			  
 		    			  InboundC.setTC_number(rs1.getString(7));
-		    			  Inbound.setOrderNO(rs1.getString(8));
 		    			  InboundC.setACT(rs1.getString(10));
-		    			  InboundC.setWO_location(rs1.getString(9));
+		    			  InboundC.setWO_location(rs1.getString(8));
 		    		  }
 		    		  
 		    		  logger.info("Checking PN: " + rs1.getString(3) + ", SN: " + rs1.getString(4) + ", QTY: " + rs1.getString(5) + ", PR_Number: " + rs1.getString(10) + ", PR_Item: " + rs1.getString(11));
 		    		  
 		    		  InboundC.setMaterialPartNumber(rs1.getString(3));
-		    		  InboundC.setWoSN(rs1.getString(4));
+		    		  if(rs1.getString(4) != null && !rs1.getNString(4).isEmpty()) {
+		    			  InboundC.setWoSN(rs1.getString(4));
+		    		  } else {
+		    			  InboundC.setWoSN("");
+		    		  }
 		    		  InboundC.setQuantity(rs1.getString(5));
 		    		  InboundC.setPRnumber(rs1.getString(11));
 		    		  InboundC.setPRitem(rs1.getString(12));	
+
 		    		  
+		    		  req.getOrder().add(Inbound);
+		    		  Inbound.getComponents().add(InboundC);
 		    		  list.add(req);
+		    		  
+		    		  pstmt2.setString(1, InboundC.getRequisition());
+		    		  pstmt2.executeQuery();
 		    	  }
+		    	 
 		      }
+		      if (rs1 != null && !rs1.isClosed()) rs1.close();
+		      
+		      
      
 		} catch (Exception e) {
 		      e.printStackTrace();
@@ -244,44 +299,86 @@ public class Part_Requisition_Data {
 		
 	}
 	
-	public String setOpsLine(String opsline, String email) throws Exception{
-		String Executed = "OK";
-		
-		String query = "INSERT INTO OPS_LINE_EMAIL_MASTER (OPS_LINE, \"EMAIL\") VALUE (?, ?)";
-		
-		PreparedStatement ps = null;
-		
-		try {
-			if (con == null || con.isClosed()) {
-				con = DataSourceClient.getConnection();
-				logger.severe("The connection was stablished successfully with status: " + String.valueOf(!con.isClosed()));
-			}
-			
-			ps = con.prepareStatement(query);
-			
-			ps.setString(1, opsline);
-			ps.setString(2, email);
-			
-			ps.executeUpdate();
-		} catch(SQLException sqle) {
-			logger.severe("A SQLException" + " occurred executing the query to get the location site capacity. " + "\n error: " + ErrorType.BAD_REQUEST + "\n message: " + sqle.getMessage());
-			throw new Exception("A SQLException" + " occurred executing the query to get the location site capacity. " + "\n error: " + ErrorType.BAD_REQUEST + "\n message: " + sqle.getMessage());
-		} catch (NullPointerException npe) {
-			logger.severe("A NullPointerException occurred executing the query to get the location site capacity. " + "\n error: " + ErrorType.BAD_REQUEST + "\n message: " + npe.getMessage());
-			throw new Exception("A NullPointerException occurred executing the query to get the location site capacity. " + "\n error: " + ErrorType.BAD_REQUEST + "\n message: " + npe.getMessage());
-		} catch (Exception e) {
-			logger.severe("An Exception occurred executing the query to get the location site capacity. " + "\n error: " + ErrorType.INTERNAL_SERVER_ERROR + "\n message: " + e.getMessage());
-			throw new Exception("An Exception occurred executing the query to get the location site capacity. " + "\n error: " + ErrorType.INTERNAL_SERVER_ERROR + "\n message: " + e.getMessage());
-		} finally {
-			try {
-				if(ps != null && !ps.isClosed()) ps.close();
-			} catch(SQLException e) {
-				logger.severe("Error trying to close the statement");
-			}
-		}
-		
-		return Executed;
-	}
+	public String setOpsLine(String opsLine, String email) throws Exception {
+	    String Executed = "OK";
+
+	    String query =
+	      "INSERT INTO OPS_LINE_EMAIL_MASTER (OPS_LINE, \"EMAIL\") VALUES (?, ?)";
+
+	    PreparedStatement ps = null;
+
+	    try {
+	      if (con == null || con.isClosed()) {
+	        con = DataSourceClient.getConnection();
+	        logger.severe(
+	          "The connection was stablished successfully with status: " +
+	          String.valueOf(!con.isClosed())
+	        );
+	      }
+
+	      ps = con.prepareStatement(query);
+
+	      ps.setString(1, opsLine);
+	      ps.setString(2, email);
+
+	      ps.executeUpdate();
+	    } catch (SQLException sqle) {
+	      logger.severe(
+	        "A SQLException" +
+	        " occurred executing the query to get the location site capacity. " +
+	        "\n error: " +
+	        ErrorType.BAD_REQUEST +
+	        "\nmessage: " +
+	        sqle.getMessage()
+	      );
+	      throw new Exception(
+	        "A SQLException" +
+	        " occurred executing the query to get the location site capacity. " +
+	        "\n error: " +
+	        ErrorType.BAD_REQUEST +
+	        "\nmessage: " +
+	        sqle.getMessage()
+	      );
+	    } catch (NullPointerException npe) {
+	      logger.severe(
+	        "A NullPointerException occurred executing the query to get the location site capacity. " +
+	        "\n error: " +
+	        ErrorType.BAD_REQUEST +
+	        "\nmessage: " +
+	        npe.getMessage()
+	      );
+	      throw new Exception(
+	        "A NullPointerException occurred executing the query to get the location site capacity. " +
+	        "\n error: " +
+	        ErrorType.BAD_REQUEST +
+	        "\nmessage: " +
+	        npe.getMessage()
+	      );
+	    } catch (Exception e) {
+	      logger.severe(
+	        "An Exception occurred executing the query to get the location site capacity. " +
+	        "\n error: " +
+	        ErrorType.INTERNAL_SERVER_ERROR +
+	        "\nmessage: " +
+	        e.getMessage()
+	      );
+	      throw new Exception(
+	        "An Exception occurred executing the query to get the location site capacity. " +
+	        "\n error: " +
+	        ErrorType.INTERNAL_SERVER_ERROR +
+	        "\nmessage: " +
+	        e.getMessage()
+	      );
+	    } finally {
+	      try {
+	        if (ps != null && !ps.isClosed()) ps.close();
+	      } catch (SQLException e) {
+	        logger.severe("An error ocurrer trying to close the statement");
+	      }
+	    }
+
+	    return Executed;
+	  }
 	
 	public String deleteOpsLine(String opsline) throws Exception{
 		String Executed = "OK";

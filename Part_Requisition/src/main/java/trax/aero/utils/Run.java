@@ -34,11 +34,16 @@ public class Run implements Runnable{
 		String executed = "OK";
 		try {
 			ArrayReq = data.getRequisiton();
-			boolean success = false;
+			 String markSendResult;
+		      boolean success = false;
 			
 			if(!ArrayReq.isEmpty()) {
 				for (INT13_SND ArrayRequest : ArrayReq) {
-					logger.info("RUN INFO " + ArrayRequest.getOrder().get(0).getOrderNO());
+					 if (!ArrayRequest.getOrder().isEmpty()) {
+	                        logger.info("RUN INFO " + ArrayRequest.getOrder().get(0).getOrderNO());
+	                    } else {
+	                        logger.info("RUN INFO: Order list is empty");
+	                    }
 					JAXBContext jc = JAXBContext.newInstance(INT13_SND.class);
 					Marshaller marshaller = jc.createMarshaller();
 					marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
@@ -49,10 +54,11 @@ public class Run implements Runnable{
 			          logger.info("Output: " + sw.toString());
 
 			          for (int i = 0; i < MAX_ATTEMPTS; i++) {
-			            success = poster.post(ArrayRequest, url);
-			            if (success) {
-			              break;
-			            }
+			        	  markSendResult = data.markSendData();
+			        	  if ("OK".equals(markSendResult)) {
+			            success = true;
+			            break;
+			        	  }
 			          }
 			         if (!success) {
 			        	 logger.severe("Unable to send XML "+ "to URL " + url);
@@ -63,10 +69,12 @@ public class Run implements Runnable{
 			        	 try {
 			        		 String body = poster.getBody();
 				              StringReader sr = new StringReader(body);
+				              logger.info("Raw XML data: " + body);
 				              jc = JAXBContext.newInstance(INT13_TRAX.class);
+				              String xmlDeclaration = body.split("\\s+", 3)[0];
+				              logger.info("XML Declaration: " + xmlDeclaration);
 				              Unmarshaller unmarshaller = jc.createUnmarshaller();
-				              List<INT13_TRAX> unmarshal = (List<INT13_TRAX>) unmarshaller.unmarshal(sr);
-							input = unmarshal;
+				              input = (List<INT13_TRAX>) unmarshaller.unmarshal(sr);
 				              
 				              
 				              

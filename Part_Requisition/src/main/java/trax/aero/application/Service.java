@@ -15,6 +15,7 @@ import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 
+
 import trax.aero.controller.Part_Requisition_Controller;
 import trax.aero.data.Part_Requisition_Data;
 import trax.aero.logger.LogManager;
@@ -37,14 +38,14 @@ public class Service {
 	@GET
 	@Path("/setOpsLine")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response setOpsLine(@QueryParam("opsLine") String opsline, @QueryParam("email") String email) {
+	public Response setOpsLine(@QueryParam("opsLine") String opsLine, @QueryParam("email") String email) {
 		
 		Part_Requisition_Data data = new Part_Requisition_Data();
 		
 		String executed = "OK";
 		
 		try {
-			executed = data.setOpsLine(opsline, email);
+			executed = data.setOpsLine(opsLine, email);
 		} catch(Exception e) {
 			executed = e.toString();
 			Part_Requisition_Controller.addError(e.toString());
@@ -54,7 +55,8 @@ public class Service {
 			try {
 				if(data.getCon() != null && !data.getCon().isClosed())
 					data.getCon().close();
-			} catch(SQLException e) {
+			}
+			catch(SQLException e) {
 				executed = e.toString();
 			}
 			logger.info("finishing");

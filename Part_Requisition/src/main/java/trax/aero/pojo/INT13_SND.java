@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name = "DT_TRAX_SND_I13_4109_REQ", namespace = "http://singaporeair.com/mro/ESDTRAX")
+@XmlRootElement(name = "MT_TRAX_SND_I13_4109_REQ", namespace = "http://singaporeair.com/mro/ESDTRAX")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class INT13_SND {
 	

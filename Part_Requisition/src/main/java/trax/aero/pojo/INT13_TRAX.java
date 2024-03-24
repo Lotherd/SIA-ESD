@@ -1,5 +1,9 @@
 package trax.aero.pojo;
 
+
+
+import java.util.ArrayList;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -8,6 +12,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "MT_TRAX_I13_TRAX", namespace = "http://singaporeair.com/mro/ESDTRAX")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class INT13_TRAX {
+	
+	@XmlElement(name = "INT13_TRAX")
+    private ArrayList<INT13_TRAX> items;
 	
 	@XmlElement(name = "PR_NUMBER")
 	private String PRnumber;
@@ -35,6 +42,16 @@ public class INT13_TRAX {
 	
 	@XmlElement(name = "REQUISITION_LINE")
 	private String requisitionLine;
+
+	
+	
+	public ArrayList<INT13_TRAX> getItems() {
+		return items;
+	}
+
+	public void setItems(ArrayList<INT13_TRAX> items) {
+		this.items = items;
+	}
 
 	public String getPRnumber() {
 		return PRnumber;

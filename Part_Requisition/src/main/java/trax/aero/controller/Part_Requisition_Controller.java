@@ -143,29 +143,30 @@ public class Part_Requisition_Controller {
         }
 	}
 	
-	public static void sendEmailService(String outcome) {
-		if(toEmail == null || toEmail.trim().isEmpty()) {
-			logger.severe("Email address (toEmail) is not configured. Please check the system properties.");
-            return;
-		} try {
-			ArrayList < String > emailsList = new ArrayList < String > (Arrays.asList(toEmail.split(",")));
-            Email email = new SimpleEmail();
-            email.setHostName(host);
-            email.setSmtpPort(Integer.valueOf(port));
-            email.setAuthentication("apikey", "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");
-            email.setFrom(fromEmail);
-            email.setSubject("Part Requisition Interface encountered a Error");
-            for (String emails: emailsList) {
-                email.addTo(emails);
-            }
-            email.setMsg("Input" + " has encountered an issue. " + "Enter records manually. " + "Issues found at:\n" + errors);
-            email.send();
-		} catch (Exception e) {
-            logger.severe(e.toString());
-            logger.severe("Email not found");
-        } finally {
-            errors = "";
-        }
-	}
+	 public static void sendEmailService(String outcome) {
+	    	if (toEmail == null || toEmail.trim().isEmpty()) {
+	            logger.severe("Email address (toEmail) is not configured. Please check the system properties.");
+	            return;
+	        }
+	        try {
+	            ArrayList < String > emailsList = new ArrayList < String > (Arrays.asList(toEmail.split(",")));
+	            Email email = new SimpleEmail();
+	            email.setHostName(host);
+	            email.setSmtpPort(Integer.valueOf(port));
+	            email.setAuthentication("apikey", "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");
+	            email.setFrom(fromEmail);
+	            email.setSubject("Import_TC_MHR Interface encountered a Error");
+	            for (String emails: emailsList) {
+	                email.addTo(emails);
+	            }
+	            email.setMsg("Input" + " has encountered an issue. " + "Enter records manually. " + "Issues found at:\n" + errors);
+	            email.send();
+	        } catch (Exception e) {
+	            logger.severe(e.toString());
+	            logger.severe("Email not found");
+	        } finally {
+	            errors = "";
+	        }
+	    }
 	
 }

@@ -21,8 +21,8 @@ public class DataSourceClient {
 			
 			DataSource ds = null;
 			
-			if(System.getProperty("jboss.serve.config.dis") != null) ds = (DataSource) ctx.lookup("java:/TraxStandaloneDS");
-			else ds = (DataSource) ctx.lookup("TraxStandaloneSD");
+			if(System.getProperty("jboss.serve.config.dir") != null) ds = (DataSource) ctx.lookup("java:/TraxStandaloneDS");
+			else ds = (DataSource) ctx.lookup("TraxStandaloneDS");
 			connection = ds.getConnection();
 		} catch (Exception e) {
 			logger.severe("An error ocurred trying connect to the DataSource: TraxStandaloneDS");

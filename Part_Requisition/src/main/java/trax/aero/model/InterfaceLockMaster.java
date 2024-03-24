@@ -78,7 +78,7 @@ public class InterfaceLockMaster implements Serializable{
 	}
 
 	public BigDecimal getMaxLock() {
-		return maxLock;
+		return maxLock != null ? this.maxLock : BigDecimal.ZERO;
 	}
 
 	public void setMaxLock(BigDecimal maxLock) {

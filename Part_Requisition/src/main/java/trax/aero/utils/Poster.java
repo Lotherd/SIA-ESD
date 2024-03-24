@@ -73,7 +73,7 @@ public class Poster {
 					}
 					
 					logger.info("POSTING REQUEST: " + requests + "to URL: " + url);
-					body = null;  
+					  
 					
 					JAXBContext jc = JAXBContext.newInstance(INT13_SND.class);
 					Marshaller marshaller = jc.createMarshaller();
@@ -90,7 +90,6 @@ public class Poster {
 					if(response.getStatus() == 200 || response.getStatus() == 202){
 						return true;
 					}
-					body = null;
 					return false;
 					
 			} catch (Exception exc) {

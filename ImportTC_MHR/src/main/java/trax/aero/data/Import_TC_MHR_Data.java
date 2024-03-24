@@ -395,7 +395,7 @@ public class Import_TC_MHR_Data {
 	      if (pstmt4 != null && !pstmt4.isClosed()) pstmt4.close();
 		  if (pstmt5 != null && !pstmt5.isClosed()) pstmt5.close();
 	    }
-	    logger.info("DONE " + list.size());
+	   
 	    return list;
 	  }
 
