@@ -117,7 +117,7 @@ public class Import_TC_MHR_Data {
 	  public String markTransaction(INT6_TRAX request) {
 		    executed = "OK";
 
-		    String sqlDate = "UPDATE WO_TASK_CARD SET INTERFACE_TRANSFERRED_DATE = sysdate, INTERFACE_FLAG = null WHERE INTERFACE_TRANSFERRED_DATE IS NULL AND TASK_CARD = ? AND WO = ?";
+		    String sqlDate = "UPDATE WO_TASK_CARD SET INTERFACE_TRANSFERRED_DATE = sysdate, INTERFACE_FLAG = null WHERE TASK_CARD = ? AND WO = ?";
 		    String sqlOPS = "UPDATE WO_TASK_CARD_ITEM SET OPS_NO = ? WHERE TASK_CARD = ? AND WO = ?";
 
 		    try (PreparedStatement pstmt2 = con.prepareStatement(sqlDate);
@@ -163,7 +163,7 @@ public class Import_TC_MHR_Data {
 	      "SELECT REFERENCE_TASK_CARD,TASK_CARD_DESCRIPTION,PRIORITY,WO,TASK_CARD,(SELECT W.STATUS FROM WO W WHERE W.WO = WO_TASK_CARD.WO) AS STATUS,\r\n" +
 	      "(SELECT W.RFO_NO FROM WO W WHERE W.WO = WO_TASK_CARD.WO AND W.MODULE = 'SHOP' AND WO_TASK_CARD.INTERFACE_FLAG is not null \r\n" +
 	      "AND (WO_TASK_CARD.non_routine = 'N' OR WO_TASK_CARD.non_routine = 'Y' OR WO_TASK_CARD.non_routine IS NULL) AND w.rfo_no IS NOT NULL) as ESD_RFO \r\n" +
-	      "FROM WO_TASK_CARD WHERE INTERFACE_TRANSFERRED_DATE IS NULL AND (1=(SELECT count(*) FROM WO W \r\n" +
+	      "FROM WO_TASK_CARD WHERE (INTERFACE_TRANSFERRED_DATE IS NULL OR MODIFIED_DATE > INTERFACE_TRANSFERRED_DATE ) AND (1=(SELECT count(*) FROM WO W \r\n" +
 	      "WHERE W.WO = WO_TASK_CARD.WO AND W.MODULE = 'SHOP' AND WO_TASK_CARD.INTERFACE_FLAG is not null AND W.RFO_NO is not null \r\n" +
 	      "AND (WO_TASK_CARD.non_routine = 'N' OR WO_TASK_CARD.non_routine = 'Y' OR WO_TASK_CARD.non_routine IS NULL)))  \r\n" +
 	      "AND (non_routine = 'N' OR non_routine = 'Y' OR non_routine IS NULL) AND EXISTS (SELECT 1 FROM wo w WHERE w.wo = wo_task_card.wo AND w.module = 'SHOP' AND w.rfo_no IS NOT NULL AND w.status = 'OPEN') \r\n" ;
@@ -189,7 +189,7 @@ public class Import_TC_MHR_Data {
 	    String sqlCategory = 
 		    	" SELECT WO_CATEGORY FROM WO WHERE WO =?";
 	    
-	    String sqlMark = "UPDATE WO_TASK_CARD SET INTERFACE_FLAG = null WHERE INTERFACE_TRANSFERRED_DATE IS NULL AND TASK_CARD = ? AND WO = ?";
+	    String sqlMark = "UPDATE WO_TASK_CARD SET INTERFACE_TRANSFERRED_DATE = SYSDATE WHERE TASK_CARD = ? AND WO = ?";
 
 	    PreparedStatement pstmt1 = null;
 	    ResultSet rs1 = null;
