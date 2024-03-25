@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -124,11 +125,11 @@ public class Service {
 		return Response.ok(group, MediaType.APPLICATION_JSON).build();
 	}
 	
-	@GET
+	@POST
 	@Path("/markTransaction")
 	@Consumes(MediaType.APPLICATION_XML + ";charset=utf-8")
 	@Produces(MediaType.APPLICATION_XML + ";charset=utf-8")
-	public Response markTransaction(List<INT13_TRAX> input) {
+	public Response markTransaction(INT13_TRAX input) {
 		String executed = "OK";
 		
 		Part_Requisition_Data data = new Part_Requisition_Data("mark");
@@ -159,10 +160,9 @@ public class Service {
 		}catch(Exception e) {
 			logger.severe(e.toString());
 			Part_Requisition_Controller.addError(e.toString());
-			for(INT13_TRAX in : input ) {
-				OpsLineEmail opsLineEmail = data.getOpsLineStaffName(in.getRequisition());
-				Part_Requisition_Controller.sendEmailOpsLine(null, in, opsLineEmail);
-			}
+				OpsLineEmail opsLineEmail = data.getOpsLineStaffName(input.getRequisition());
+				Part_Requisition_Controller.sendEmailOpsLine(null, input, opsLineEmail);
+			
 		}finally {
 			try {
 				if(data.getCon() != null && !data.getCon().isClosed())

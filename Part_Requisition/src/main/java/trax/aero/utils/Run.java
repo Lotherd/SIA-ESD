@@ -64,47 +64,11 @@ public class Run implements Runnable{
 			        	 logger.severe("Unable to send XML "+ "to URL " + url);
 			        	 Part_Requisition_Controller.addError("Unable to send XML " + "to URL " + url + " MAX_ATTEMPTS: " + MAX_ATTEMPTS);
 			         } else {
-			        	 List<INT13_TRAX> input = null;
+			        	 INT13_TRAX input = null;
 			        	 
-			        	 try {
-			        		 String body = poster.getBody();
-				              StringReader sr = new StringReader(body);
-				              logger.info("Raw XML data: " + body);
-				              jc = JAXBContext.newInstance(INT13_TRAX.class);
-				              String xmlDeclaration = body.split("\\s+", 3)[0];
-				              logger.info("XML Declaration: " + xmlDeclaration);
-				              Unmarshaller unmarshaller = jc.createUnmarshaller();
-				              input = (List<INT13_TRAX>) unmarshaller.unmarshal(sr);
-				              
-				              
-				              
-				              marshaller = jc.createMarshaller();
-				              marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-				              sw = new StringWriter();
-				              marshaller.marshal(input, sw);
-				              logger.info("Input: " + sw.toString());
-				              
-				              executed = data.markTransaction(input);
-				              if(!executed.equalsIgnoreCase("OK")) {
-				            	  executed = "Issue found";
-					                throw new Exception("Issue found");
-				              }
-
-			        	 }catch (Exception e){
-			        		 logger.severe(e.toString());
-				              Part_Requisition_Controller.addError(e.toString());
-				              if (input != null) {
-				            	  for(INT13_TRAX r: input) {
-				            		  OpsLineEmail opsLineEmail = data.getOpsLineStaffName(r.getRequisition());
-				            		  
-				            		  Part_Requisition_Controller.sendEmailOpsLine(r.getOPS(), r, opsLineEmail);
-				            	  }
-				              } else {
-				            	  Part_Requisition_Controller.sendEmailService("NULL");
-				              }
-			        	 }finally {
+			        	 
 			        		 logger.info("finishing");
-			        	 }
+			        	 
 			        	 logger.info("POST status: " + String.valueOf(success) + " to URL: " + url);
 			         }
 				}

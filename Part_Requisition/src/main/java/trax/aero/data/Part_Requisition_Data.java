@@ -74,7 +74,7 @@ public class Part_Requisition_Data {
 		    } catch (Exception e) {
 		     Part_Requisition_Controller.addError(e.toString());
 		    }
-		factory = Persistence.createEntityManagerFactory("TraxStandaloneDS");
+		factory = Persistence.createEntityManagerFactory("TraxQADS");
 		em = factory.createEntityManager();
 	}
 	
@@ -84,7 +84,7 @@ public class Part_Requisition_Data {
 	
 	public String markSendData() throws JAXBException
 	{
-	  List<INT13_TRAX> request = (List<INT13_TRAX>) new INT13_TRAX();
+	  INT13_TRAX request = new INT13_TRAX();
 	  try {
 	        markTransaction(request);
 	        logger.info("markTransaction completed successfully.");
@@ -96,16 +96,16 @@ public class Part_Requisition_Data {
 	    }
 	}
 	
-	public String markTransaction(List<INT13_TRAX> request) {
+	public String markTransaction(INT13_TRAX request) {
 		executed = "OK";
 		
 		String sqlDate = "UPDATE REQUISITION_HEADER SET INTERFACE_TRANSFERRED_DATE_ESD = sysdate WHERE INTERFACE_TRANSFERRED_DATE_ESD IS NULL AND REQUISITION = ?";
 		String sqlDate2 = "UPDATE REQUISITION_DETAIL SET INTERFACE_TRANSFERRED_DATE_ESD = sysdate WHERE INTERFACE_TRANSFERRED_DATE_ESD IS NULL AND REQUISITION = ? AND REQUISITION_LINE = ?";
-		String sqlPR = "UPDATE REQUISITION_DETAIL SET PR_NO = ? AND PR_ITEM = ? WHERE REQUISITION = ? AND REQUISITION_LINE = ?";
-		String sqlUpdateREQD = "UPDATE REQUISITION_DETAIL SET STATUS = 'CLOSED' WHERE REQUISITION = ? AND REQUISITON_LINE = ? AND PR_NO IS NOT NULL AND PR_ITEM IS NOT NULL";
-		String sqlUpdateREQH = "UPDATE REQUISITION_HEADER RH SET RH.STATUS = 'CLOSED' WHERE RH.REQUISITION IN (SELECT RD.REQUISITION FROM RD.REQUISITION WHERE RD.PR_NO IS NOT NULL AND RD.PR_ITEM IS NOT NULL GROUP BY RD.REQUISITION HAVING COUNT(*) = COUNT(CASE WHEN RD.STATUS = 'CLOSED' THEN 1 END))";
+		String sqlPR = "UPDATE REQUISITION_DETAIL SET PR_NO = ?, PR_ITEM = ? WHERE REQUISITION = ? AND REQUISITION_LINE = ?";
+		String sqlUpdateREQD = "UPDATE REQUISITION_DETAIL SET STATUS = 'CLOSED' WHERE REQUISITION = ? AND REQUISITION_LINE = ? AND PR_NO IS NOT NULL AND PR_ITEM IS NOT NULL";
+		String sqlUpdateREQH = "UPDATE REQUISITION_HEADER RH SET RH.STATUS = 'CLOSED' WHERE RH.REQUISITION IN (SELECT RD.REQUISITION FROM REQUISITION_DETAIL RD WHERE RD.PR_NO IS NOT NULL AND RD.PR_ITEM IS NOT NULL GROUP BY RD.REQUISITION HAVING COUNT(*) = COUNT(CASE WHEN RD.STATUS = 'CLOSED' THEN 1 END))";
 		String sqlCheckWOStatus = "SELECT W.STATUS FROM WO W, REQUISITION_HEADER R WHERE R.REQUISITION = ? and W.WO = R.WO";
-		String sqlUpdateReqStatus = "UPDTE REQUISITION_HEADER SET STATUS = 'CLOSED' WHERE REQUISITION = ?";
+		String sqlUpdateReqStatus = "UPDATE REQUISITION_HEADER SET STATUS = 'CLOSED' WHERE REQUISITION = ?";
 		
 		try(PreparedStatement pstmt1 = con.prepareStatement(sqlDate);
 			PreparedStatement pstmt2 = con.prepareStatement(sqlDate2);
@@ -115,45 +115,43 @@ public class Part_Requisition_Data {
 			PreparedStatement pstmt6 = con.prepareStatement(sqlCheckWOStatus);
 			PreparedStatement pstmt7 = con.prepareStatement(sqlUpdateReqStatus)){
 			
-			for(INT13_TRAX r: request) {
-				if(r != null) {
-					pstmt1.setString(1, r.getRequisition());
+				if(request != null) {
+					pstmt1.setString(1, request.getRequisition());
 					pstmt1.executeUpdate();
 					
-					pstmt2.setString(1, r.getRequisition());
-					pstmt2.setString(2, r.getRequisitionLine());
+					pstmt2.setString(1, request.getRequisition());
+					pstmt2.setString(2, request.getRequisitionLine());
 					pstmt2.executeUpdate();
 					
-					if (r.getPRnumber() != null && !r.getPRnumber().isEmpty() && r.getPRitem() != null && !r.getPRitem().isEmpty()) {
-						pstmt3.setString(1, r.getPRnumber());
-						pstmt3.setString(2, r.getPRitem());
-						pstmt3.setString(3, r.getRequisition());
-						pstmt3.setString(4, r.getRequisitionLine());
+					if (request.getPRnumber() != null && !request.getPRnumber().isEmpty() && request.getPRitem() != null && !request.getPRitem().isEmpty()) {
+						pstmt3.setString(1, request.getPRnumber());
+						pstmt3.setString(2, request.getPRitem());
+						pstmt3.setString(3, request.getRequisition());
+						pstmt3.setString(4, request.getRequisitionLine());
 						pstmt3.executeUpdate();
 					}
 					
-					if (r.getPRnumber() != null && !r.getPRnumber().isEmpty() && r.getPRitem() != null && !r.getPRitem().isEmpty()) {
-		                pstmt4.setString(1, r.getRequisition());
-		                pstmt4.setString(2, r.getRequisitionLine());
+					if (request.getPRnumber() != null && !request.getPRnumber().isEmpty() && request.getPRitem() != null && !request.getPRitem().isEmpty()) {
+		                pstmt4.setString(1, request.getRequisition());
+		                pstmt4.setString(2, request.getRequisitionLine());
 		                pstmt4.executeUpdate();
 		            }
 					
 					pstmt5.executeUpdate();
 					
-					pstmt6.setString(1, r.getRequisition());
+					pstmt6.setString(1, request.getRequisition());
 					ResultSet rs = pstmt6.executeQuery();
 					if(rs.next() && "CLOSED".equalsIgnoreCase(rs.getString(1))) {
-						pstmt7.setString(1, r.getRequisition());
+						pstmt7.setString(1, request.getRequisition());
 						pstmt7.executeUpdate();
 					}
 					
-					if (!r.getExceptionId().equalsIgnoreCase("53")) {
-						executed = "Request PR number: " + r.getPRnumber() + ", Error Code: " + r.getPRitem() + ", Error Code: " + r.getExceptionId() + ", Remarks: " + r.getExceptionDetail();
+					if (!request.getExceptionId().equalsIgnoreCase("53")) {
+						executed = "Request PR number: " + request.getPRnumber() + ", Error Code: " + request.getPRitem() + ", Error Code: " + request.getExceptionId() + ", Remarks: " + request.getExceptionDetail();
 						Part_Requisition_Controller.addError(executed);
 					}
 					
 				}
-			}
 			
 		} catch (SQLException e) {
 	        executed = e.toString();
@@ -184,10 +182,11 @@ public class Part_Requisition_Data {
 		ArrayList<OrderSND> orlist = new ArrayList<OrderSND>();
 		ArrayList<OrderComponentSND> oclist = new ArrayList<OrderComponentSND>();
 		
-		String sqlRequisition ="SELECT DISTINCT RD.REQUISITION, RD.REQUISITION_LINE, RD.PN, NULLIF( WT.PN_SN, '') AS SN, RD.QTY_REQUIRE, R.WO, R.TASK_CARD, W.LOCATION, \r\n" +
+		String sqlRequisition ="SELECT DISTINCT RD.REQUISITION, RD.REQUISITION_LINE, RD.PN, WS.PN_SN, RD.QTY_REQUIRE, R.WO, R.TASK_CARD, W.LOCATION, \r\n" +
 							   "W.RFO_NO, WTI.OPS_NO, RD.PR_NO, RD.PR_ITEM, R.CREATED_BY FROM REQUISITION_DETAIL RD INNER JOIN REQUISITION_HEADER R ON R.REQUISITION = RD.REQUISITION \r\n" +
 							   "INNER JOIN WO W ON W.WO = R.WO INNER JOIN WO_TASK_CARD WT ON WT.WO = R.WO AND WT.TASK_CARD = R.TASK_CARD \r\n" +
-							   "INNER JOIN WO_TASK_CARD_ITEM WTI ON WTI.WO = R.WO AND WT.TASK_CARD = R.TASK_CARD WHERE RD.STATUS = 'OPEN' AND R.INTERFACE_TRANSFERRED_DATE_ESD IS NULL AND W.RFO_NO IS NOT NULL";
+							   "INNER JOIN WO_TASK_CARD_ITEM WTI ON WTI.WO = R.WO AND WT.TASK_CARD = R.TASK_CARD INNER JOIN WO_SHOP_DETAIL WS ON WS.WO = W.WO \r\n" + 
+							   "WHERE RD.STATUS = 'OPEN' AND R.INTERFACE_TRANSFERRED_DATE_ESD IS NULL AND W.RFO_NO IS NOT NULL AND RAISE_PR ='Y'";
 		
 		String sqlMark = "UPDATE REQUISITION_HEADER SET INTERFACE_TRANSFERRED_DATE_ESD = SYSDATE WHERE REQUISITION = ?";
 		

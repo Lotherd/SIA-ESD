@@ -28,7 +28,7 @@ public class Part_Requisition_Controller {
 	static String toEmail = System.getProperty("Part_REQ_toEmail");
 	
 	public Part_Requisition_Controller() {
-		factory = Persistence.createEntityManagerFactory("TraxStandaloneDS");
+		factory = Persistence.createEntityManagerFactory("TraxQADS");
 		factory.createEntityManager();
 	}
 	
@@ -75,16 +75,15 @@ public class Part_Requisition_Controller {
         }
 	}
 	
-	public static void sendEmailResponse(List<INT13_TRAX> response) {
+	public static void sendEmailResponse(INT13_TRAX response) {
 		if(toEmail == null || toEmail.trim().isEmpty()) {
 			logger.severe("Email address (toEmail) is not configured. Please check the system properties.");
 			return;
 		}
 		try {
 			StringBuilder responses = new StringBuilder();
-			for(INT13_TRAX r: response) {
-				responses.append("SAP Requisiton: ").append(r.getRequisition()).append(",");
-			}
+				responses.append("SAP Requisiton: ").append(response.getRequisition()).append(",");
+			
 			ArrayList < String > emailsList = new ArrayList < String > (Arrays.asList(toEmail.split(",")));
             Email email = new SimpleEmail();
             email.setHostName(host);
