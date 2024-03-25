@@ -83,7 +83,7 @@ public class Poster {
 		            }
 					
 					logger.info("POSTING Requests: " + requests + "to URL: " +url);
-			
+					body = null;
 					
 					JAXBContext jc = JAXBContext.newInstance(INT6_SND.class);
 		            Marshaller marshaller = jc.createMarshaller();
@@ -101,7 +101,7 @@ public class Poster {
 		                requestStates.put(requestKey, "accepted");
 		                return true;
 		            }
-					
+					body = null;
 					return false;
 				} catch (Exception exc) {
 					logger.severe(exc.toString());

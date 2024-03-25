@@ -37,11 +37,21 @@ public class Run implements Runnable{
 	    try {
 	      //loop
 	      ArrayReq = data.getTaskCards();
+	    //null test
+	      if (ArrayReq == null) {
+	          logger.severe("Task cards are null");
+	          return;
+	      }
 	      String markSendResult;
 	      boolean success = false;
 
 	      if (!ArrayReq.isEmpty()) {
 	        for (INT6_SND ArrayRequest : ArrayReq) {
+	        	//null test
+	        	 if (ArrayRequest == null || ArrayRequest.getOrder() == null || ArrayRequest.getOrder().get(0) == null) {
+	                 logger.severe("ArrayRequest or its order is null");
+	                 continue;
+	             }
 	        	logger.info("RUN INFO " + ArrayRequest.getOrder().get(0).getTraxWO());
 	          JAXBContext jc = JAXBContext.newInstance(INT6_SND.class);
 	          Marshaller marshaller = jc.createMarshaller();
@@ -73,77 +83,7 @@ public class Run implements Runnable{
 	          } else {
 	            INT6_TRAX input = null;
 
-	            try {
-	              String body = poster.getBody();
-	              
-	             /* if(body == null || body.trim().isEmpty()) {
-                      logger.severe("Received empty XML response");
-                      throw new Exception("Empty XML response");
-                  }*/
-	              
-	              StringReader sr = new StringReader(body);
-	              logger.info("Raw XML data: " + body);
-	              jc = JAXBContext.newInstance(INT6_TRAX.class);
-	              String xmlDeclaration = body.split("\\s+", 3)[0];
-	              logger.info("XML Declaration: " + xmlDeclaration);
-	              Unmarshaller unmarshaller = jc.createUnmarshaller();
-	              
-	              input = (INT6_TRAX) unmarshaller.unmarshal(sr);
-
-	              marshaller = jc.createMarshaller();
-	              marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-	              sw = new StringWriter();
-	              marshaller.marshal(input, sw);
-	              logger.info("Input: " + sw.toString());
-
-	              executed = data.markTransaction(input);
-	              if (!executed.equalsIgnoreCase("OK")) {
-	                executed = "Issue found";
-	                throw new Exception("Issue found");
-	              }
-	            } catch (Exception e) {
-	              logger.severe(e.toString());
-	              Import_TC_MHR_Controller.addError(e.toString());
-	              if (input != null) {
-	                for (OrderTRAX o : input.getOrder()) {
-	                  if (
-	                    o.getOperations() != null && !o.getOperations().isEmpty()
-	                  ) {
-	                    for (OperationTRAX op : o.getOperations()) {
-	                      OpsLineEmail opsLineEmail = data.getOpsLineStaffName(
-	                        o.getWo(),
-	                        op.getTaskCard()
-	                      );
-
-	                      Import_TC_MHR_Controller.sendEmailOpsLine(
-	                        op.getOpsNo(),
-	                        o,
-	                        op,
-	                        opsLineEmail
-	                      );
-	                    }
-	                  } else {
-	                    for (OperationTRAX op : o.getOperations()) {
-	                      OpsLineEmail opsLineEmail = data.getOpsLineStaffName(
-	                        o.getWo(),
-	                        op.getTaskCard()
-	                      );
-
-	                      Import_TC_MHR_Controller.sendEmailOpsLine(
-	                        "",
-	                        o,
-	                        op,
-	                        opsLineEmail
-	                      );
-	                    }
-	                  }
-	                }
-	              } else {
-	                Import_TC_MHR_Controller.sendEmailService("NULL");
-	              }
-	            } finally {
-	              logger.info("finishing");
-	            }
+	            logger.info("finishing");
 	            logger.info(
 	              "POST status: " + String.valueOf(success) + " to URL: " + url
 	            );
