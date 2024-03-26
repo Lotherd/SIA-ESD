@@ -74,7 +74,7 @@ public class Part_Requisition_Data {
 		    } catch (Exception e) {
 		     Part_Requisition_Controller.addError(e.toString());
 		    }
-		factory = Persistence.createEntityManagerFactory("TraxQADS");
+		factory = Persistence.createEntityManagerFactory("TraxStandaloneDS");
 		em = factory.createEntityManager();
 	}
 	
@@ -293,7 +293,7 @@ public class Part_Requisition_Data {
 		      if (pstmt1 != null && !pstmt1.isClosed()) pstmt1.close();
 		}
 		
-		logger.info("DONE " + list.size());
+		//logger.info("DONE " + list.size());
 	    return list;
 		
 	}

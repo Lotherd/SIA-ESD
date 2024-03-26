@@ -28,7 +28,7 @@ public class Part_Requisition_Controller {
 	static String toEmail = System.getProperty("Part_REQ_toEmail");
 	
 	public Part_Requisition_Controller() {
-		factory = Persistence.createEntityManagerFactory("TraxQADS");
+		factory = Persistence.createEntityManagerFactory("TraxStandaloneDS");
 		factory.createEntityManager();
 	}
 	
