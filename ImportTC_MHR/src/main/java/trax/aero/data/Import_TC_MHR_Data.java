@@ -91,7 +91,7 @@ public class Import_TC_MHR_Data {
 	      Import_TC_MHR_Controller.addError(e.toString());
 	    }
 
-	    factory = Persistence.createEntityManagerFactory("TraxStandaloneDS");
+	    factory = Persistence.createEntityManagerFactory("TraxQADS");
 	    em = factory.createEntityManager();
 	  }
 
@@ -289,7 +289,7 @@ public class Import_TC_MHR_Data {
 	          if (rs4 != null && rs4.next()) {
 	        	    logger.info("Status of the WO: " + rs4.getString(1));
 
-	        	    if (!"OPEN".equals(rs4.getString(1))) {
+	        	    if ("CANCEL".equals(rs4.getString(1))) {
 	        	        deletionIndicator = "Y";
 	        	    }
 	        	}

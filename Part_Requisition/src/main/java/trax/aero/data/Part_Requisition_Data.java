@@ -146,7 +146,7 @@ public class Part_Requisition_Data {
 						pstmt7.executeUpdate();
 					}
 					
-					if (!request.getExceptionId().equalsIgnoreCase("53")) {
+					if (request.getExceptionId() != null && !request.getExceptionId().equalsIgnoreCase("53")) {
 						executed = "Request PR number: " + request.getPRnumber() + ", Error Code: " + request.getPRitem() + ", Error Code: " + request.getExceptionId() + ", Remarks: " + request.getExceptionDetail();
 						Part_Requisition_Controller.addError(executed);
 					}
