@@ -2,8 +2,8 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             xmlns="http://singaporeair.com/mro/ESDTRAX"
             targetNamespace="http://singaporeair.com/mro/ESDTRAX">
-    <xsd:element name="MT_TRAX_I13_TRAX" type="DT_TRAX_I13_TRAX" />
-    <xsd:complexType name="DT_TRAX_I13_TRAX">
+    <xsd:element name="MT_TRAX_RCV_I13_4109_RES" type="DT_TRAX_RCV_I13_4109_RES" />
+    <xsd:complexType name="DT_TRAX_RCV_I13_4109_RES">
         <xsd:sequence>
             <xsd:element name="PR_NUMBER" minOccurs="1">
                 <xsd:simpleType>

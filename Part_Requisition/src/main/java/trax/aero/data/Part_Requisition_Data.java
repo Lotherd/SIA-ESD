@@ -170,11 +170,11 @@ public class Part_Requisition_Data {
 	        try {
 	            this.con = DataSourceClient.getConnection(); 
 	            if (this.con == null || this.con.isClosed()) {
-	                throw new IllegalStateException("No se pudo restablecer la conexión a la base de datos.");
+	                throw new IllegalStateException("Issues connecting to the database.");
 	            }
-	            logger.info("Conexión a la base de datos restablecida exitosamente.");
+	            logger.info("Established connection to the database.");
 	        } catch (SQLException e) {
-	            throw new IllegalStateException("Error al restablecer la conexión a la base de datos.", e);
+	            throw new IllegalStateException("Error trying to re-connect to the database.", e);
 	        }
 	    }
 		

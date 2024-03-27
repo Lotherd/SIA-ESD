@@ -81,7 +81,7 @@ public class Poster {
 					StringWriter sw = new StringWriter();
 					marshaller.marshal(data, sw);
 					String xmlContent = sw.toString();
-					logger.info("XML Content: " + xmlContent);
+					//logger.info("XML Content: " + xmlContent);
 					
 					response = builder.post(Entity.entity(xmlContent, MediaType.APPLICATION_XML + ";charset=utf-8"));
 					body = response.readEntity(String.class);

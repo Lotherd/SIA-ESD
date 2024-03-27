@@ -65,9 +65,10 @@ public class Run implements Runnable{
 	          logger.info("Output: " + sw.toString());
 
 	          for (int i = 0; i < MAX_ATTEMPTS; i++) {
+	        	  success = poster.post(ArrayRequest, url);
 	        	  markSendResult = data.markSendData();
 	        	  if ("OK".equals(markSendResult)) {
-	            success = true;
+	        		success = true;  
 	            break;
 	        	  }
 	          }
