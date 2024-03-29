@@ -166,7 +166,15 @@ public class Import_TC_MHR_Data {
 	      "FROM WO_TASK_CARD WHERE (INTERFACE_TRANSFERRED_DATE IS NULL OR MODIFIED_DATE > INTERFACE_TRANSFERRED_DATE ) AND (1=(SELECT count(*) FROM WO W \r\n" +
 	      "WHERE W.WO = WO_TASK_CARD.WO AND W.MODULE = 'SHOP' AND WO_TASK_CARD.INTERFACE_FLAG is not null AND W.RFO_NO is not null \r\n" +
 	      "AND (WO_TASK_CARD.non_routine = 'N' OR WO_TASK_CARD.non_routine = 'Y' OR WO_TASK_CARD.non_routine IS NULL)))  \r\n" +
-	      "AND (non_routine = 'N' OR non_routine = 'Y' OR non_routine IS NULL) AND EXISTS (SELECT 1 FROM wo w WHERE w.wo = wo_task_card.wo AND w.module = 'SHOP' AND w.rfo_no IS NOT NULL AND w.status = 'OPEN') \r\n" ;
+	      "AND (non_routine = 'N' OR non_routine = 'Y' OR non_routine IS NULL) AND EXISTS (SELECT 1 FROM wo w WHERE w.wo = wo_task_card.wo AND w.module = 'SHOP' AND w.rfo_no IS NOT NULL AND w.status = 'OPEN') \r\n" +
+	      "UNION ALL SELECT REFERENCE_TASK_CARD,TASK_CARD_DESCRIPTION,PRIORITY,WO,TASK_CARD,(SELECT W.STATUS FROM WO W WHERE W.WO = WO_TASK_CARD_ADUIT.WO) AS STATUS,\r\n" +
+	      "(SELECT W.RFO_NO FROM WO W WHERE W.WO = WO_TASK_CARD_ADUIT.WO AND W.MODULE = 'SHOP' \r\n" +
+	      "AND (WO_TASK_CARD_ADUIT.non_routine = 'N' OR WO_TASK_CARD_ADUIT.non_routine = 'Y' OR WO_TASK_CARD_ADUIT.non_routine IS NULL) AND w.rfo_no IS NOT NULL) as ESD_RFO \r\n" +
+	      "FROM WO_TASK_CARD_ADUIT WHERE (INTERFACE_SAP_TRANSFERRED_DATE IS NULL OR MODIFIED_DATE > INTERFACE_SAP_TRANSFERRED_DATE ) AND (1=(SELECT count(*) FROM WO W \r\n" +
+	      "WHERE W.WO = WO_TASK_CARD_ADUIT.WO AND W.MODULE = 'SHOP' AND W.RFO_NO is not null \r\n" +
+	      "AND (WO_TASK_CARD_ADUIT.non_routine = 'N' OR WO_TASK_CARD_ADUIT.non_routine = 'Y' OR WO_TASK_CARD_ADUIT.non_routine IS NULL))) \r\n" +
+	      "AND (non_routine = 'N' OR non_routine = 'Y' OR non_routine IS NULL) AND EXISTS (SELECT 1 FROM wo w WHERE w.wo = wo_task_card_aduit.wo AND w.module = 'SHOP' AND w.rfo_no IS NOT NULL AND w.status = 'OPEN') \r\n" +
+	      "and wo_task_card_aduit.Transaction_type = 'DELETE'";
 
 	    if (MaxRecord != null && !MaxRecord.isEmpty()) {
 	      sqlTaskCard = "SELECT *	FROM (" + sqlTaskCard;
@@ -186,10 +194,15 @@ public class Import_TC_MHR_Data {
 	    String sqlStatus = 
 	    	" SELECT STATUS FROM WO_TASK_CARD WHERE WO =? and TASK_CARD = ?";
 	    
+	    String sqlStatusAudit = 
+	    		"SELECT Transaction_type FROM wo_task_card_aduit WHERE WO = ? AND TASK_CARD = ? and rownum = 1 ORDER BY modified_Date DESC";
+	    
 	    String sqlCategory = 
 		    	" SELECT WO_CATEGORY FROM WO WHERE WO =?";
 	    
 	    String sqlMark = "UPDATE WO_TASK_CARD SET INTERFACE_TRANSFERRED_DATE = SYSDATE WHERE TASK_CARD = ? AND WO = ?";
+	    
+	    String sqlMark2 = "UPDATE WO_TASK_CARD_ADUIT SET INTERFACE_SAP_TRANSFERRED_DATE = SYSDATE WHERE TASK_CARD = ? AND WO = ? AND TRANSACTION_TYPE ='DELETE'";
 
 	    PreparedStatement pstmt1 = null;
 	    ResultSet rs1 = null;
@@ -208,6 +221,12 @@ public class Import_TC_MHR_Data {
 	    
 	    PreparedStatement pstmt6 = null;
 	    ResultSet rs6 = null;
+	    
+	    PreparedStatement pstmt7 = null;
+	    ResultSet rs7 = null;
+	    
+	    PreparedStatement pstmt8 = null;
+	    ResultSet rs8 = null;
 
 
 	    try {
@@ -217,6 +236,8 @@ public class Import_TC_MHR_Data {
 	      pstmt4 = con.prepareStatement(sqlStatus);
 	      pstmt5 = con.prepareStatement(sqlCategory);
 	      pstmt6 = con.prepareStatement(sqlMark);
+	      pstmt7 = con.prepareStatement(sqlMark2);
+	      pstmt8 = con.prepareStatement(sqlStatusAudit);
 
 	      if (MaxRecord != null && !MaxRecord.isEmpty()) {
 	        pstmt1.setString(1, MaxRecord);
@@ -296,6 +317,24 @@ public class Import_TC_MHR_Data {
 	          if (rs4 != null && !rs4.isClosed()) {
 	        	    rs4.close();
 	        	}
+	          
+	          if (deletionIndicator.equals("N")) {
+	        	  
+	        	  pstmt8.setString(1, Inbound.getTraxWO());
+		          pstmt8.setString(2, InboundItem.getTcNumber());
+		          rs8 = pstmt8.executeQuery();  
+		          
+	        	  if(rs8 != null && rs8.next()) {
+	        		  logger.info("Task Card deletion: " + rs8.getString(1));
+	        		  if ("DELETE".equals(rs8.getString(1))) {
+		        	        deletionIndicator = "Y";
+		        	    }
+	        	  }
+	        	  if (rs8 != null && !rs8.isClosed()) {
+		        	    rs8.close();
+		        	}
+	          }
+	          
 	          InboundItem.setDeletionIndicator(deletionIndicator);
 	          //Inbound.getOperations().add(InboundItem);
 
@@ -312,7 +351,9 @@ public class Import_TC_MHR_Data {
 	          DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.S");
 
 	          LocalDateTime storedDateTime = null;
-	      
+	         
+        		  InboundItem.setStandardManHours("00");
+        	 
 	          if (rs2 != null) {
 	        	    //loop per line
 	        	  while (rs2.next()) {
@@ -364,6 +405,7 @@ public class Import_TC_MHR_Data {
 
 	        	     // Inbound.getOperations().add(InboundItem);
 	        	    }
+	        	  
 	        	  }
 	          
 	          
@@ -375,6 +417,11 @@ public class Import_TC_MHR_Data {
 	          pstmt6.setString(2, Inbound.getTraxWO());
 	          
 	          pstmt6.executeQuery();
+	          
+	          pstmt7.setString(1, InboundItem.getTcNumber());
+	          pstmt7.setString(2, Inbound.getTraxWO());
+	          
+	          pstmt7.executeQuery();
 	         
 	         
 	        }
