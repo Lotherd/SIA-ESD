@@ -157,11 +157,6 @@
       <scope>test</scope>
     </dependency>
     -->
-    <dependency>
-    	<groupId>Creation_Sales_Order</groupId>
-    	<artifactId>Creation_Sales_Order</artifactId>
-    	<version>0.0.1-SNAPSHOT</version>
-    </dependency>
   </dependencies>
 
 
