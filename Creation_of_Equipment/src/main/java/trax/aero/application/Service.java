@@ -34,6 +34,37 @@ public class Service {
 		return Response.ok("Healthy", MediaType.TEXT_PLAIN).build();
 	}
 	
+	
+	@GET
+	@Path("/setOpsLine")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response setOpsLine(@QueryParam("opsLine") String opsLine, @QueryParam("email") String email) {
+		
+		Creation_Equipment_Data data = new Creation_Equipment_Data();
+		
+		String executed = "OK";
+		
+		try {
+			executed = data.setOpsLine(opsLine, email);
+		} catch(Exception e) {
+			executed = e.toString();
+			Creation_Equipment_Controller.addError(e.toString());
+			Creation_Equipment_Controller.sendEmailService(executed);
+			logger.severe(executed);
+		} finally {
+			try {
+				if(data.getCon() != null && !data.getCon().isClosed())
+					data.getCon().close();
+			}
+			catch(SQLException e) {
+				executed = e.toString();
+			}
+			logger.info("finishing");
+		}
+		
+		return Response.ok(executed,MediaType.APPLICATION_JSON).build();
+	}
+	
 	@GET
 	@Path("/deleteOpsLine")
 	@Produces(MediaType.APPLICATION_JSON)

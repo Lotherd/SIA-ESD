@@ -14,6 +14,7 @@ import trax.aero.logger.LogManager;
 import trax.aero.pojo.INT5_SND;
 import trax.aero.pojo.INT5_TRAX;
 import trax.aero.pojo.OpsLineEmail;
+import trax.aero.pojo.OrderSND;
 
 public class Creation_Equipment_Controller {
 	EntityManagerFactory factory;
@@ -46,10 +47,11 @@ public class Creation_Equipment_Controller {
 		try {
 			String requests = "";
 			for (INT5_SND or: arrayReq) {
-				String WO = or.getTraxWo();
-				requests = requests + " (WO Number: " + WO + ", Location: " + or.getLocationWO() + ", WO Description: " + or.getTcDescription() + "),";
+				for(OrderSND r: or.getOrder()) {
+					String WO = r.getTraxWo();
+				requests = requests + " (WO Number: " + WO + ", Location: " + r.getLocationWO() + ", WO Description: " + r.getTcDescription() + "),";
 			}
-			
+			}
 			ArrayList <String> emailsList = new ArrayList <> (Arrays.asList(toEmail.split(",")));
 			Email email = new SimpleEmail();
 			email.setHostName(host);

@@ -3,9 +3,9 @@
             xmlns="http://singaporeair.com/mro/ESDTRAX"
             targetNamespace="http://singaporeair.com/mro/ESDTRAX">
 
-    <xsd:element name="MT_TRAX_I5_TRAX" type="DT_TRAX_I5_TRAX" />
+    <xsd:element name="MT_TRAX_RCV_I5_ACK_4113" type="DT_TRAX_RCV_I5_ACK_4113"/>
 
-    <xsd:complexType name="DT_TRAX_I5_TRAX">
+    <xsd:complexType name="DT_TRAX_RCV_I5_ACK_4113">
         <xsd:sequence>
             <xsd:element name="MOD_NO" minOccurs="1">
                 <xsd:simpleType>

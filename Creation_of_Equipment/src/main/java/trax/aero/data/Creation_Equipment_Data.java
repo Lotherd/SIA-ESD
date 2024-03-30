@@ -28,6 +28,7 @@ import trax.aero.model.InterfaceLockMaster;
 import trax.aero.pojo.INT5_SND;
 import trax.aero.pojo.INT5_TRAX;
 import trax.aero.pojo.OpsLineEmail;
+import trax.aero.pojo.OrderSND;
 import trax.aero.utils.DataSourceClient;
 import trax.aero.utils.ErrorType;
 
@@ -140,6 +141,7 @@ public class Creation_Equipment_Data {
 	    }
 		
 		ArrayList<INT5_SND> list = new ArrayList<INT5_SND>();
+		ArrayList<OrderSND> orlist = new ArrayList<OrderSND>();
 		
 		String sqlWorkOrder = "SELECT W.WO, W.LOCATION, W.WO_DESCRIPTION, WS.PN, WS.PN_SN, W.SCHEDULE_START_DATE, \r\n" +
 				"W.SCHEDULE_COMPLETION_DATE, P.ENGINE, W.CREATED_BY, W.THIRD_PARTY_WO, S.PARTY, CASE \r\n" +
@@ -179,42 +181,39 @@ public class Creation_Equipment_Data {
 				while(rs1.next()) {
 					logger.info("Processiong WO: " + rs1.getString(1) + ", WO Description: " + rs1.getString(3) + ", Location: " + rs1.getString(2));
 					INT5_SND req = new INT5_SND();
-					
-					if (rs1.getString(1) != null && !rs1.getNString(1).isEmpty() && rs1.getString(3) != null && rs1.getNString(3).isEmpty()) {
-						req.setTraxWo(rs1.getString(1));
-						req.setTcDescription(rs1.getString(3));
-						req.setLocationWO(rs1.getString(2));
-					} else {
-						req.setTraxWo("");
-						req.setTcDescription("");
-						req.setLocationWO("");
-					}
+					orlist = new ArrayList<OrderSND>();
+		    		 req.setOrder(orlist);
+		    		 OrderSND Inbound = new OrderSND();
+		    		 
+					if (rs1.getString(1) != null && !rs1.getNString(1).isEmpty()) {
+						Inbound.setTraxWo(rs1.getString(1));
+						Inbound.setTcDescription(rs1.getString(3));
+						Inbound.setLocationWO(rs1.getString(2));
+					} 
 					
 					logger.info("WO Scheduled Start Date: " + rs1.getString(6) + ", WO Scheduled Completion Date: " + rs1.getString(7) + ", Employee: " + rs1.getString(9));
 					
-					req.setStartDate(rs1.getString(6));
-					req.setEndDate(rs1.getString(7));
-					req.setCustomerID(rs1.getString(9));
+					Inbound.setStartDate(rs1.getString(6));
+					Inbound.setEndDate(rs1.getString(7));
+					Inbound.setCustomerID(rs1.getString(9));
 					
 					if (rs1.getString(8) != null && !rs1.getNString(8).isEmpty()) {
-						req.setTechControl(rs1.getString(8));
+						Inbound.setTechControl(rs1.getString(8));
 					}
 					
-					req.setPflag(rs1.getString(12));
+					Inbound.setPflag(rs1.getString(12));
 					
 					logger.info("PN: " + rs1.getString(4) + ", SN: " + rs1.getString(5));
 					
-					if (rs1.getString(4) != null && !rs1.getNString(4).isEmpty() && rs1.getString(5) != null && rs1.getNString(5).isEmpty()) {
-						req.setPn(rs1.getString(4));
-						req.setPnSn(rs1.getString(5));
-					} else {
-						req.setPn("");
-						req.setPnSn("");
+					if (rs1.getString(4) != null && !rs1.getNString(4).isEmpty()) {
+						Inbound.setPn(rs1.getString(4));
+						Inbound.setPnSn(rs1.getString(5));
 					}
 					
+					req.getOrder().add(Inbound);
 					list.add(req);
 					
-					pstmt2.setString(1, req.getTraxWo());
+					pstmt2.setString(1, Inbound.getTraxWo());
 					pstmt2.executeQuery();
 				}
 			}

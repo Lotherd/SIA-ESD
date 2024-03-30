@@ -25,6 +25,7 @@ import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 
 import trax.aero.logger.LogManager;
 import trax.aero.pojo.INT5_SND;
+import trax.aero.pojo.OrderSND;
 
 public class Poster {
 	
@@ -33,7 +34,7 @@ public class Poster {
 	Logger logger = LogManager.getLogger("CreationEquipment");
 	private String body = null;
 	
-	public boolean post(ArrayList <INT5_SND> data, String URL) {
+	public boolean post(INT5_SND data, String URL) {
 		{
 			Client client = null;
 			Response response = null;
@@ -65,7 +66,7 @@ public class Poster {
 					
 					String requests = "";
 					
-					for(INT5_SND r: data) {
+					for(OrderSND r: data.getOrder()) {
 						requests = requests +" (WO: " + r.getTraxWo() + ", Location: " + r.getLocationWO() + ", Description: " + r.getTcDescription() + "),";
 					}
 					

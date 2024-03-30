@@ -36,20 +36,23 @@ public class Run implements Runnable{
 			
 			if(!ArrayReq.isEmpty()) {
 				for (INT5_SND ArrayRequest : ArrayReq) {
-					logger.info("RUN INFO " + ArrayRequest.getTraxWo());
-				}
+					if (!ArrayRequest.getOrder().isEmpty()) {
+					logger.info("RUN INFO " + ArrayRequest.getOrder().get(0).getTraxWo());
 				
+				}else {
+                    logger.info("RUN INFO: Order list is empty");
+                }
 				JAXBContext jc = JAXBContext.newInstance(INT5_SND.class);
 				Marshaller marshaller = jc.createMarshaller();
 				marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 				
 				StringWriter sw = new StringWriter();
-				marshaller.marshal(ArrayReq, sw);
+				marshaller.marshal(ArrayRequest, sw);
 				
 				logger.info("Output: " + sw.toString());
 
 		          for (int i = 0; i < MAX_ATTEMPTS; i++) {
-		        	  success = poster.post(ArrayReq, url);
+		        	  success = poster.post(ArrayRequest, url);
 		        	  markSendResult = data.markSendData();
 		        	  if ("OK".equals(markSendResult)) {
 		            success = true;
@@ -67,7 +70,10 @@ public class Run implements Runnable{
 				        logger.info("POST status: " + String.valueOf(success) + " to URL: " + url);
 			         }
 			}
-			
+			}
+			if (!Creation_Equipment_Controller.getError().isEmpty()) {
+				throw new Exception("Issue found");
+			}
 		}catch(Throwable e){
 			logger.severe(e.toString());
 			Creation_Equipment_Controller.addError(e.toString());
