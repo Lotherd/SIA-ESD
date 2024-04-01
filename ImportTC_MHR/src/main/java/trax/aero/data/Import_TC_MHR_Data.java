@@ -198,7 +198,7 @@ public class Import_TC_MHR_Data {
 	    		"SELECT Transaction_type FROM wo_task_card_aduit WHERE WO = ? AND TASK_CARD = ? and rownum = 1 ORDER BY modified_Date DESC";
 	    
 	    String sqlCategory = 
-		    	" SELECT WO_CATEGORY FROM WO WHERE WO =?";
+		    	" SELECT TASK_CARD_CATEGORY FROM WO_TASK_CARD WHERE WO =? AND TASK_CARD =?";
 	    
 	    String sqlMark = "UPDATE WO_TASK_CARD SET INTERFACE_TRANSFERRED_DATE = SYSDATE WHERE TASK_CARD = ? AND WO = ?";
 	    
@@ -286,6 +286,7 @@ public class Import_TC_MHR_Data {
 	          }
 	          
 	          pstmt5.setString(1, Inbound.getTraxWO());
+	          pstmt5.setString(2, InboundItem.getTcNumber());
 	          rs5 = pstmt5.executeQuery();
 	          
 	          
@@ -305,20 +306,20 @@ public class Import_TC_MHR_Data {
 	          pstmt4.setString(2, InboundItem.getTcNumber());
 	          rs4 = pstmt4.executeQuery();
 	          
-	          String deletionIndicator = "N";
+	          String deletionIndicator = "";
 	          
 	          if (rs4 != null && rs4.next()) {
 	        	    logger.info("Status of the WO: " + rs4.getString(1));
 
 	        	    if ("CANCEL".equals(rs4.getString(1))) {
-	        	        deletionIndicator = "Y";
+	        	        deletionIndicator = "X";
 	        	    }
 	        	}
 	          if (rs4 != null && !rs4.isClosed()) {
 	        	    rs4.close();
 	        	}
 	          
-	          if (deletionIndicator.equals("N")) {
+	          if (deletionIndicator.equals("")) {
 	        	  
 	        	  pstmt8.setString(1, Inbound.getTraxWO());
 		          pstmt8.setString(2, InboundItem.getTcNumber());
@@ -327,7 +328,7 @@ public class Import_TC_MHR_Data {
 	        	  if(rs8 != null && rs8.next()) {
 	        		  logger.info("Task Card deletion: " + rs8.getString(1));
 	        		  if ("DELETE".equals(rs8.getString(1))) {
-		        	        deletionIndicator = "Y";
+		        	        deletionIndicator = "X";
 		        	    }
 	        	  }
 	        	  if (rs8 != null && !rs8.isClosed()) {
