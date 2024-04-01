@@ -266,6 +266,10 @@ public class Part_Requisition_Data {
 		    		  InboundC.setQuantity(rs1.getString(5));
 		    		  InboundC.setPRnumber(rs1.getString(11));
 		    		  InboundC.setPRitem(rs1.getString(12));	
+		    		  
+		    		  String site = "",recepient = "" ;
+		    		  site = getSAPSite(rs1.getString(6));
+		    		  recepient = getRecepient(site);
 
 		    		  
 		    		  req.getOrder().add(Inbound);
@@ -297,6 +301,157 @@ public class Part_Requisition_Data {
 	    return list;
 		
 	}
+	
+	
+private String getRecepient(String site) {
+		
+		String query = "",group  = "";
+		
+		query = " Select recipient FROM SITE_RECIPIENT_MASTER where site = ?";
+				
+		try
+		{
+			group = (String) em.createNativeQuery(query).setParameter(1, site).getSingleResult();	
+			return group;
+		}
+		catch (Exception e) 
+		{
+			//e.printStackTrace();
+			logger.severe("An Exception occurred executing the query to get the recipient. " + "\n error: " + e.toString());
+		}
+		return group;
+	}
+
+	private String getSAPSite(String wo) {
+		String site = " ";
+		
+		String query = " SELECT site FROM WO where wo = ?";	
+		try
+		{
+			site = (String) em.createNativeQuery(query).setParameter(1, wo.toString()).getSingleResult();	
+			
+		}
+		
+		catch (Exception e) 
+		{
+			logger.severe("An Exception occurred executing the query to get the site. " + "\n error: " +  e.toString());
+		}
+		
+		return site;
+	}
+	
+	public String setSite(String site, String recipient) throws Exception{
+		String Exceuted = "OK";
+		String query = "INSERT INTO SITE_RECIPIENT_MASTER (SITE, \"RECIPIENT\") VALUES (?, ?)";
+		
+		PreparedStatement ps = null;
+		try
+		{
+			if (con == null || con.isClosed()) {
+		        con = DataSourceClient.getConnection();
+		        logger.severe(
+		          "The connection was stablished successfully with status: " +
+		          String.valueOf(!con.isClosed())
+		        );
+		      }
+			
+			ps = con.prepareStatement(query);
+
+		      ps.setString(1, site);
+		      ps.setString(2, recipient);
+
+		      ps.executeUpdate();
+		}
+		catch (Exception e) 
+		{
+			logger.severe("An Exception occurred executing the query to set the site recipient. " + "\n error: " + e.toString() );
+			throw new Exception("An Exception occurred executing the query to set the site recipient. " + "\n error: " + e.toString());
+		}
+		
+		return Exceuted;
+	}
+	
+	public String deleteSite( String site) throws Exception{
+		String Exceuted = "OK";
+		String query = "DELETE SITE_RECIPIENT_MASTER where site = ?";		
+		 PreparedStatement ps = null;
+		    
+		    try {
+		    	if(con == null || con.isClosed()) {
+		    		con = DataSourceClient.getConnection();
+		    		logger.info("The connection was stablished successfully with status: " + String.valueOf(!con.isClosed()));
+		    	}
+		    	
+		    	ps = con.prepareStatement(query);
+		    	
+			    ps.setString(1, site);
+			    
+			    ps.executeUpdate();
+			    }
+		catch (Exception e) 
+		{
+			logger.severe("An Exception occurred executing the query to delete the site . " + "\n error: " + e.toString());
+			throw new Exception("An Exception occurred executing the query to delete the site. " + "\n error: " + e.toString());
+		}
+		
+		return Exceuted;
+	}
+	
+	
+	public String getSite( String site) throws Exception{
+		
+		ArrayList<String> groups = new ArrayList<String>();
+		
+		String query = "", group = "";
+		if(site != null && !site.isEmpty()) {
+			query = " Select recipient, site FROM SITE_RECIPIENT_MASTER where site = ?";
+		}else {
+			query = " Select recipient, site FROM SITE_RECIPIENT_MASTER";
+		}
+		try
+		{
+			
+			
+			
+			List<Object[]>	rs = null;
+			
+			if(site != null && !site.isEmpty()) {
+				rs = em.createNativeQuery(query).setParameter(1, site).getResultList();	
+			}else {
+				rs = em.createNativeQuery(query).getResultList();	
+			}
+			
+			
+			if (rs != null) 
+			{
+				for(Object[] a : rs )
+				{
+					
+				groups.add("Recipient: "+a[0] + " Site: " +a[1] );
+
+				}
+			}
+			
+			
+			
+		}
+		catch (Exception e) 
+		{
+			logger.severe("An Exception occurred executing the query to get the site recipient. " + "\n error: " + e.toString());
+			throw new Exception("An Exception occurred executing the query to get the site recipient. " + "\n error: " +  e.toString());
+		}
+		for(String g : groups) {
+			group = group + g +"\n";
+			
+		}
+		
+		return group;
+		
+	}
+	
+	
+	
+	
 	
 	public String setOpsLine(String opsLine, String email) throws Exception {
 	    String Executed = "OK";

@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.ejb.EJB;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -27,6 +28,8 @@ import trax.aero.pojo.OpsLineEmail;
 public class Service {
 	
 	Logger logger = LogManager.getLogger("PartREQ");
+	
+	
 	
 	@GET
 	@Path("/healthCheck")
@@ -124,6 +127,101 @@ public class Service {
 		
 		return Response.ok(group, MediaType.APPLICATION_JSON).build();
 	}
+	
+	
+	@GET
+	@Path("/setSite")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response setSite(@QueryParam("site") String site, @QueryParam("recipient") String recipient )
+	{
+		Part_Requisition_Data data = new Part_Requisition_Data();
+		String executed = "OK";
+		                              
+		try 
+        {    		 
+        	executed = data.setSite(site,recipient);
+		}
+		catch(Exception e)
+		{
+			Part_Requisition_Controller.addError(e.toString());
+			Part_Requisition_Controller.sendEmailService(executed);
+		} finally {
+			try {
+				if(data.getCon() != null && !data.getCon().isClosed())
+					data.getCon().close();
+			} catch(Exception e) {
+				executed = e.toString();
+			}
+			logger.info("finishing");
+		}
+	   return Response.ok(executed,MediaType.APPLICATION_JSON).build();
+	}
+	
+	@GET
+	@Path("/deleteSite")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response deleteSite(@QueryParam("site") String site )
+	{
+		Part_Requisition_Data data = new Part_Requisition_Data();
+		String executed  = "OK";
+		                              
+		try 
+        {    		 
+			data.deleteSite(site);
+		}
+		catch(Exception e)
+		{
+			Part_Requisition_Controller.addError(e.toString());
+			Part_Requisition_Controller.sendEmailService(executed);
+		} finally {
+			try {
+				if(data.getCon() != null && !data.getCon().isClosed())
+					data.getCon().close();
+			} catch(Exception e) {
+				executed = e.toString();
+			}
+			logger.info("finishing");
+		}
+	   return Response.ok(executed ,MediaType.APPLICATION_JSON).build();
+	}
+	
+	@GET
+	@Path("/getSite")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getSite(@QueryParam("site") String site )
+	{
+		Part_Requisition_Data data = new Part_Requisition_Data();
+		String executed = "OK";
+		
+		String group = null;
+		                              
+		try 
+        {    		 
+			group = data.getSite(site);
+        	if(group == null ) {
+        		executed = "Issue found";
+        		throw new Exception("Issue found");
+        	}
+		}
+		catch(Exception e)
+		{
+			Part_Requisition_Controller.addError(e.toString());
+			Part_Requisition_Controller.sendEmailService(executed);
+		} finally {
+			try {
+				if(data.getCon() != null && !data.getCon().isClosed())
+					data.getCon().close();
+			} catch(Exception e) {
+				executed = e.toString();
+			}
+			logger.info("finishing");
+		}
+		
+		
+	   return Response.ok(group,MediaType.APPLICATION_JSON).build();
+	}
+	
+	
 	
 	@POST
 	@Path("/markTransaction")

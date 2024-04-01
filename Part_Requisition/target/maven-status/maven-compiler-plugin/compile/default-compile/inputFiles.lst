@@ -3,9 +3,11 @@ C:\Users\Ernesto.Rodriguez\eclipse-workspace\Part_Requisition\src\main\java\trax
 C:\Users\Ernesto.Rodriguez\eclipse-workspace\Part_Requisition\src\main\java\trax\aero\utils\DataSourceClient.java
 C:\Users\Ernesto.Rodriguez\eclipse-workspace\Part_Requisition\src\main\java\trax\aero\logger\LogManager.java
 C:\Users\Ernesto.Rodriguez\eclipse-workspace\Part_Requisition\src\main\java\trax\aero\application\MyRestApp.java
+C:\Users\Ernesto.Rodriguez\eclipse-workspace\Part_Requisition\src\main\java\trax\aero\utils\EmailSender.java
 C:\Users\Ernesto.Rodriguez\eclipse-workspace\Part_Requisition\src\main\java\trax\aero\application\Service.java
 C:\Users\Ernesto.Rodriguez\eclipse-workspace\Part_Requisition\src\main\java\trax\aero\model\InterfaceLockMaster.java
 C:\Users\Ernesto.Rodriguez\eclipse-workspace\Part_Requisition\src\main\java\trax\aero\pojo\OrderSND.java
+C:\Users\Ernesto.Rodriguez\eclipse-workspace\Part_Requisition\src\main\java\trax\aero\interfaces\Part_Data.java
 C:\Users\Ernesto.Rodriguez\eclipse-workspace\Part_Requisition\src\main\java\trax\aero\exception\CustomizeHandledException.java
 C:\Users\Ernesto.Rodriguez\eclipse-workspace\Part_Requisition\src\main\java\trax\aero\utils\TraxHostNameVerifier.java
 C:\Users\Ernesto.Rodriguez\eclipse-workspace\Part_Requisition\src\main\java\trax\aero\pojo\INT13_TRAX.java
