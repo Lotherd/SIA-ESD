@@ -119,9 +119,11 @@ public class Import_TC_MHR_Data {
 
 		    String sqlDate = "UPDATE WO_TASK_CARD SET INTERFACE_TRANSFERRED_DATE = sysdate, INTERFACE_FLAG = null WHERE TASK_CARD = ? AND WO = ?";
 		    String sqlOPS = "UPDATE WO_TASK_CARD_ITEM SET OPS_NO = ? WHERE TASK_CARD = ? AND WO = ?";
+		    String sqlOPS_audit = "UPDATE WO_TASK_CARD_ITEM_ADUIT SET OPS_NO = ? WHERE TASK_CARD = ? AND WO = ?";
 
 		    try (PreparedStatement pstmt2 = con.prepareStatement(sqlDate);
-		         PreparedStatement pstmt3 = con.prepareStatement(sqlOPS)) {
+		         PreparedStatement pstmt3 = con.prepareStatement(sqlOPS);
+		    	PreparedStatement pstmt4 = con.prepareStatement(sqlOPS_audit)	) {
 
 		        for (OrderTRAX r : request.getOrder()) {
 		            for (OperationTRAX o : r.getOperations()) {
@@ -129,6 +131,10 @@ public class Import_TC_MHR_Data {
 		                    pstmt2.setString(1, o.getTaskCard());
 		                    pstmt2.setString(2, r.getWo());
 		                    pstmt2.executeUpdate();
+		                    
+		                    pstmt3.setString(1, o.getTaskCard());
+		                    pstmt3.setString(2, r.getWo());
+		                    pstmt3.executeUpdate();
 
 		                    if (o.getOpsNo() != null && !o.getOpsNo().isEmpty()) {
 		                        pstmt3.setString(1, o.getOpsNo());
@@ -185,7 +191,8 @@ public class Import_TC_MHR_Data {
 	    }
 
 	    String sqlItem =
-	      "SELECT WTI.OPS_NO, WT.MODIFIED_DATE FROM WO_TASK_CARD_ITEM WTI, WO_TASK_CARD WT WHERE WTI.WO = ? AND WTI.TASK_CARD = ? AND WT.WO = WTI.WO AND WT.TASK_CARD = WTI.TASK_CARD AND ROWNUM = 1";
+	      "SELECT MAX(OPS_NO) AS OPS_NO FROM (SELECT WTI.OPS_NO FROM WO_TASK_CARD_ITEM WTI, WO_TASK_CARD WT WHERE WTI.WO = ? AND WTI.TASK_CARD = ? AND WT.WO = WTI.WO AND WT.TASK_CARD = WTI.TASK_CARD AND ROWNUM = 1 \r\n" +
+	      "UNION ALL SELECT WTIA.OPS_NO FROM WO_TASK_CARD_ITEM_ADUIT WTIA, WO_TASK_CARD_ADUIT WTA WHERE WTIA.WO = ? AND WTIA.TASK_CARD = ? AND WTA.WO = WTIA.WO AND WTA.TASK_CARD = WTIA.TASK_CARD AND ROWNUM = 1) COMBINED_RESULT WHERE ROWNUM = 1 ";
 
 	    String sqlWork =
 	     "SELECT COALESCE(SUM(NVL(man_hours, 0)), 0) AS total_man_hours, COALESCE(SUM(NVL(inspector_man_hours, 0)), 0) AS total_inspector_man_hours, COALESCE(SUM(NVL(man_hours, 0) * NVL(man_require, 0)), 0) + COALESCE(SUM(NVL(inspector_man_hours, 0) * NVL(inspector_man_require, 0)), 0) AS Total_Hours\r\n"
@@ -295,7 +302,10 @@ public class Import_TC_MHR_Data {
 	        	    
 	        	    InboundItem.setTcCategory(rs5.getString(1));
 	  	          //Inbound.getOperations().add(InboundItem);
-	        	}else {
+	        	}else if (rs5 == null ){
+	        		InboundItem.setTcCategory("");
+	        	}
+	          else {
 	          if (rs5 != null && !rs5.isClosed()) {
 	        	    rs5.close();
 	        	}
@@ -329,6 +339,8 @@ public class Import_TC_MHR_Data {
 	        		  logger.info("Task Card deletion: " + rs8.getString(1));
 	        		  if ("DELETE".equals(rs8.getString(1))) {
 		        	        deletionIndicator = "X";
+		        	        InboundItem.setTcCategory("");
+		        	        
 		        	    }
 	        	  }
 	        	  if (rs8 != null && !rs8.isClosed()) {
@@ -342,6 +354,8 @@ public class Import_TC_MHR_Data {
 
 	          pstmt2.setString(1, Inbound.getTraxWO());
 	          pstmt2.setString(2, InboundItem.getTcNumber());
+	          pstmt2.setString(3, Inbound.getTraxWO());
+	          pstmt2.setString(4, InboundItem.getTcNumber());
 	          
 	        req.getOrder().add(Inbound);
 	        Inbound.getOperations().add(InboundItem);
@@ -349,9 +363,6 @@ public class Import_TC_MHR_Data {
 
 	          rs2 = pstmt2.executeQuery();
 	          
-	          DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.S");
-
-	          LocalDateTime storedDateTime = null;
 	         
         		  InboundItem.setStandardManHours("00");
         	 
@@ -359,19 +370,13 @@ public class Import_TC_MHR_Data {
 	        	    //loop per line
 	        	  while (rs2.next()) {
 	        	      logger.info("Processing WO Task Card Item Operation Number: " + rs2.getString(1));
-	        	      
-	        	       LocalDateTime currentDateTime = LocalDateTime.parse(rs2.getString(2), formatter);
 
-
-	        	      if (storedDateTime == null || currentDateTime.isAfter(storedDateTime)) {
 	        	            if (rs2.getString(1) != null && !rs2.getString(1).isEmpty()) {
 	        	                InboundItem.setOperationNumber(rs2.getString(1));
-	        	            }
-	        	            storedDateTime = currentDateTime;
-	        	        } else {
-	        	            InboundItem.setOperationNumber("");
-	        	        }
-
+	        	            }else {
+		        	            InboundItem.setOperationNumber("");
+		        	        }
+	        	        
 	        	      //InboundItem.setDeletionIndicator("");
 
 	        	      Integer hours = 0;

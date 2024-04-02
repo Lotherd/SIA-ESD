@@ -230,6 +230,9 @@ public class Part_Requisition_Data {
 		    			  Inbound.setOrderNO("");
 		    		  }
 		    		  
+		    		  InboundC.setWO_location(rs1.getString(8));
+		    		  
+		    		  
 		    		  if (rs1.getString(1) != null && !rs1.getNString(1).isEmpty()) {
 		    			  InboundC.setRequisition(rs1.getString(1));
 		    		  } else {
@@ -244,15 +247,19 @@ public class Part_Requisition_Data {
 		    		  
 		    		  logger.info("OPS_NO: " + rs1.getString(10) + ", Created By " + rs1.getString(13) + ", Location: " + rs1.getString(8));
 		    		  
+		    		  if(rs1.getString(10) != null && rs1.getNString(10).isEmpty()) {
+		    			  InboundC.setACT(rs1.getString(10));
+		    		  } else {
+		    			  InboundC.setACT("");
+		    		  }
 		    		  
 		    		  InboundC.setGoodsRecipient(rs1.getString(13));
 		    		 
-		    		  if (rs1.getString(6) != null && rs1.getNString(6).isEmpty() && rs1.getString(9) != null && rs1.getNString(9).isEmpty()) {
-		    			  logger.info("Getting Task card: " + rs1.getString(7) + ", ESD RFO: " + rs1.getString(9) + ", Operation Number: " + rs1.getString(10));
-		    			  
+		    		  if (rs1.getString(7) != null && rs1.getNString(7).isEmpty()) {
+		    			  logger.info("Getting Task card: " + rs1.getString(7) + ", ESD RFO: " + rs1.getString(9));
 		    			  InboundC.setTC_number(rs1.getString(7));
-		    			  InboundC.setACT(rs1.getString(10));
-		    			  InboundC.setWO_location(rs1.getString(8));
+		    		  }else {
+		    			  InboundC.setTC_number(rs1.getString(7));
 		    		  }
 		    		  
 		    		  logger.info("Checking PN: " + rs1.getString(3) + ", SN: " + rs1.getString(4) + ", QTY: " + rs1.getString(5) + ", PR_Number: " + rs1.getString(10) + ", PR_Item: " + rs1.getString(11));
@@ -264,17 +271,30 @@ public class Part_Requisition_Data {
 		    			  InboundC.setWoSN("");
 		    		  }
 		    		  InboundC.setQuantity(rs1.getString(5));
+		    		  
+		    		  if(rs1.getString(11) != null && !rs1.getNString(11).isEmpty()) {
 		    		  InboundC.setPRnumber(rs1.getString(11));
-		    		  InboundC.setPRitem(rs1.getString(12));	
+		    		  }else {
+		    			  InboundC.setPRnumber("");
+		    		  }
+		    		  if(rs1.getString(12) != null && !rs1.getNString(12).isEmpty()) {
+		    			  InboundC.setPRitem(rs1.getString(12));
+			    		  }else {
+			    			  InboundC.setPRitem("");
+			    		  }
+		    		  
+		    		  
+		    		  req.getOrder().add(Inbound);
+		    		  Inbound.getComponents().add(InboundC);
+		    		  list.add(req);
 		    		  
 		    		  String site = "",recepient = "" ;
 		    		  site = getSAPSite(rs1.getString(6));
 		    		  recepient = getRecepient(site);
 
 		    		  
-		    		  req.getOrder().add(Inbound);
-		    		  Inbound.getComponents().add(InboundC);
-		    		  list.add(req);
+		    		  logger.info("SITE: " + site +", RECEPIENT: " + recepient);
+		    		  
 		    		  
 		    		  pstmt2.setString(1, InboundC.getRequisition());
 		    		  pstmt2.executeQuery();
@@ -325,7 +345,7 @@ private String getRecepient(String site) {
 	private String getSAPSite(String wo) {
 		String site = " ";
 		
-		String query = " SELECT site FROM WO where wo = ?";	
+		String query = " SELECT location FROM WO where wo = ?";	
 		try
 		{
 			site = (String) em.createNativeQuery(query).setParameter(1, wo.toString()).getSingleResult();	
