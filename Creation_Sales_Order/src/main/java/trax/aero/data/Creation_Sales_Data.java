@@ -97,6 +97,29 @@ public class Creation_Sales_Data {
 	public String markTransaction(INT7_TRAX request) {
 		executed = "OK";
 		
+		String sqlUpdateWO = "UPDATE WO SET RFO_NO = ?, INTERFACE_SAP_TRANSFERRED_DATE = SYSDATE, INTERFACE_SAP_TRANSFERRED_FLAG = 'Y' WHERE INTERFACE_SAP_TRANSFERRED_FLAG IS NULL and WO = ?";
+		try {
+			PreparedStatement pstmt1 = con.prepareStatement(sqlUpdateWO);
+			
+			if (request != null) {
+				if(request.getRfoNO() != null && !request.getRfoNO().isEmpty()) {
+					pstmt1.setString(2, request.getWO());
+					pstmt1.setString(1, request.getRfoNO());
+					pstmt1.executeUpdate();
+				}
+				
+				if (request.getExceptionId() != null && !request.getExceptionId().equalsIgnoreCase("53")) {
+					executed = "WO: " + request.getWO() + ", RFO: " + request.getRfoNO() + ", Error Code: " + request.getExceptionId() + ", Remarks: " + request.getExceptionDetail();
+				}
+			}
+			
+		}catch (SQLException e) {
+	        executed = e.toString();
+	        Creation_Sales_Controller.addError(executed);
+	        logger.severe(executed);
+	    } 
+		
+		
 		return executed;
 	}
 	
@@ -125,7 +148,154 @@ public class Creation_Sales_Data {
 					   "JOIN WO_SHOP_DETAIL WS ON W.WO = WS.WO JOIN PN_MASTER P ON WS.PN = P.PN WHERE W.SOURCE_TYPE IS NOT NULL AND S.SYSTEM_TRANSACTION = 'SOURCETYPE' \r\n" +
 					   "AND W.INTERFACE_SAP_TRANSFERRED_FLAG IS NULL AND W.INTERFACE_SAP_TRANSFERRED_DATE IS NULL AND W.STATUS = 'OPEN'";
 		
-		String sqlContract = "";		
+		String sqlContract = "SELECT CC.CONTRACT_ID, CC.BILLING_FORM, CC.DIP_PROFILE, CC.CUSTOMER_CODE, CC.CUSTOMER FROM CUSTOMER_CONTRACT_ESD CC JOIN CUSTOMER_CONTRACT_HEADER CH \r\n" +
+							 "ON TO_CHAR(CC.CUSTOMER_CODE) = TO_CHAR(CH.CUSTOMER) JOIN CUSTOMER_ORDER_HEADER CO ON CH.CONTRACT_NUMBER = CO.CONTRACT_NUMBER WHERE CO.ORDER_NUMBER = ?";	
+		
+		String sqlMark = "UPDATE WO SET INTERFACE_SAP_TRANSFERRED_DATE = SYSDATE WHERE WO = ?";
+		
+		if (MaxRecord != null && !MaxRecord.isEmpty()) {
+			sqlWO = "SELECT * FROM (" + sqlWO;
+		}
+		if (MaxRecord != null && !MaxRecord.isEmpty()) {
+			sqlWO = sqlWO + " ) WHERE ROWNUM <= ?";
+		}
+		
+		PreparedStatement pstmt1 = null;
+		 ResultSet rs1 = null;
+		 PreparedStatement pstmt2 = null;
+		 ResultSet rs2 = null;
+		 PreparedStatement pstmt3 = null;
+		 ResultSet rs3 = null;
+		 
+		 try {
+			 
+			 pstmt1 = con.prepareStatement(sqlWO);
+			 pstmt2 = con.prepareStatement(sqlContract);
+			 pstmt3 = con.prepareStatement(sqlMark);
+			 
+			 if (MaxRecord != null && !MaxRecord.isEmpty()) {
+			        pstmt1.setString(1, MaxRecord);
+			      }
+				
+				rs1 = pstmt1.executeQuery();
+				
+				if(rs1 !=null) {
+					while(rs1.next()) {
+						logger.info("Processing WO: " + rs1.getString(1) + ", WO Description: " + rs1.getString(3) + ", Location: " + rs1.getString(2));
+						INT7_SND req = new INT7_SND();
+						orlist = new ArrayList<OrderSND>();
+			    		req.setOrder(orlist);
+			    		OrderSND Inbound = new OrderSND();
+			    		
+			    		if(rs1.getString(1) != null && !rs1.getNString(1).isEmpty()) {
+			    			Inbound.setTraxWo(rs1.getString(1));
+			    			Inbound.setTcDescription(rs1.getString(3));
+			    			Inbound.setLocationWO(rs1.getString(2));
+			    		}
+			    		
+			    		logger.info("PN: " + rs1.getString(4) + ", SN: " + rs1.getString(5));
+			    		
+			    		if(rs1.getString(4) != null && !rs1.getNString(4).isEmpty()) {
+			    			Inbound.setPn(rs1.getString(4));
+			    		} else {
+			    			Inbound.setPn("");
+			    		}
+			    		
+			    		if(rs1.getString(5) != null && !rs1.getNString(5).isEmpty()) {
+			    			Inbound.setPnSn(rs1.getString(5));
+			    		} else {
+			    			Inbound.setPnSn("");
+			    		}
+			    		
+			    		logger.info("Notification Type: " + rs1.getString(9) + ", Notification Number: " + rs1.getString(10));
+			    		
+			    		if(rs1.getString(9) != null && !rs1.getNString(9).isEmpty()) {
+			    			Inbound.setNotification(rs1.getString(9));
+			    		}
+			    		
+			    		if(rs1.getString(10) != null && !rs1.getNString(10).isEmpty()) {
+			    			Inbound.setNotificationNO(rs1.getString(10));
+			    		} else {
+			    			Inbound.setNotificationNO("");
+			    		}
+			    		
+			    		logger.info("TECH CTL: " + rs1.getString(8) + ", 3P Flag: " + rs1.getString(14) + ", WBS: " + rs1.getString(11));
+			    		
+			    		
+			    		String techControl = rs1.getString(8);
+			    		
+			    		if (techControl != null) {
+			    			Inbound.setTechControl(techControl);
+			    		} else {
+			    			Inbound.setTechControl("");
+			    		}
+			    		
+			    		Inbound.setPFlag(rs1.getString(14));
+			    		
+			    		if(rs1.getString(11) != null && rs1.getNString(11).isEmpty()) {
+			    			Inbound.setWBS(rs1.getString(11));
+			    		} else {
+			    			Inbound.setWBS("");
+			    		}
+			    		
+			    		pstmt2.setString(1, Inbound.getTraxWo());
+			    		rs2 = pstmt2.executeQuery();
+			    		
+			    		if(rs2 != null && rs2.next()) {
+			    			logger.info("Contract ID: " + rs2.getString(1) + ", Billing Form: " + rs2.getString(2));
+			    			
+			    			if (rs2.getString(1) != null ) {
+			    				Inbound.setContractID(rs2.getString(1));
+			    			}
+			    			
+			    			String BillingForm = "";
+			    			
+			    			if("FIXED RATE".equals(rs2.getString(2))) {
+			    				BillingForm = "01";
+			    			} else if ("COST".equals(rs2.getString(2))) {
+			    				BillingForm = "02";
+			    			}
+			    			
+			    			Inbound.setBillFormat(BillingForm);
+			    			
+			    			logger.info("Customer ID: " + rs2.getString(4) + ", DIP Profile: " + rs2.getString(3));
+			    			
+			    			
+			    				Inbound.setDIP_Profile(rs2.getString(3));
+			    			
+			    			
+			    			if(rs2.getString(4) != null ) {
+			    				Inbound.setCustomerID(rs2.getString(4));
+			    			} 
+			    			
+			    		}
+			    		if (rs2 != null && !rs2.isClosed()) {
+			        	    rs2.close();
+			        	}
+			    		
+			    		req.getOrder().add(Inbound);
+			    		list.add(req);
+			    		
+			    		
+			    		pstmt3.setString(1, Inbound.getTraxWo());
+						pstmt3.executeQuery();
+			    		
+					}
+				}
+				if (rs1 != null && !rs1.isClosed()) rs1.close();
+		 }catch (Exception e) {
+		      e.printStackTrace();
+		      executed = e.toString();
+		      Creation_Sales_Controller.addError(e.toString());
+
+		      logger.severe(executed);
+		      throw new Exception("Issue found");
+		}finally {
+		      if (rs1 != null && !rs1.isClosed()) rs1.close();
+		      if (pstmt1 != null && !pstmt1.isClosed()) pstmt1.close();
+		      if (pstmt2 != null && !pstmt2.isClosed()) pstmt2.close();
+		      if (pstmt3 != null && !pstmt3.isClosed()) pstmt3.close();
+		}
 		
 		return list;
 	}
