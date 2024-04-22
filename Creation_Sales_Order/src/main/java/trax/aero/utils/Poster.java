@@ -65,9 +65,7 @@ public class Poster {
 				
 				String requests = "";
 				
-				for(OrderSND r: data.getOrder()) {
-					requests = requests +" (WO: " + r.getTraxWo() + ", Location: " + r.getLocationWO() + ", Description: " + r.getTcDescription() + "),";
-				}
+				
 				logger.info("POSTING REQUEST: " + requests + "to URL: " + url);
 				
 				JAXBContext jc = JAXBContext.newInstance(INT7_SND.class);

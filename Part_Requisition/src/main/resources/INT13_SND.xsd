@@ -33,7 +33,7 @@
                         </xsd:restriction>
                      </xsd:simpleType>
                   </xsd:element>
-                  <xsd:element name="ACT">
+                  <xsd:element name="OPS_NO">
                      <xsd:simpleType>
                         <xsd:restriction base="xsd:string">
                            <xsd:maxLength value="4" />

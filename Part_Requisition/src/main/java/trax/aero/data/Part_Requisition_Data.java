@@ -247,7 +247,7 @@ public class Part_Requisition_Data {
 		    		  
 		    		  logger.info("OPS_NO: " + rs1.getString(10) + ", Created By " + rs1.getString(13) + ", Location: " + rs1.getString(8));
 		    		  
-		    		  if(rs1.getString(10) != null && rs1.getNString(10).isEmpty()) {
+		    		  if(rs1.getString(10) != null) {
 		    			  InboundC.setACT(rs1.getString(10));
 		    		  } else {
 		    			  InboundC.setACT("");

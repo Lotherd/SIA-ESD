@@ -28,7 +28,6 @@ import trax.aero.model.InterfaceLockMaster;
 import trax.aero.pojo.INT5_SND;
 import trax.aero.pojo.INT5_TRAX;
 import trax.aero.pojo.OpsLineEmail;
-import trax.aero.pojo.OrderSND;
 import trax.aero.utils.DataSourceClient;
 import trax.aero.utils.ErrorType;
 
@@ -73,7 +72,7 @@ public class Creation_Equipment_Data {
 		    } catch (Exception e) {
 		      Creation_Equipment_Controller.addError(e.toString());
 		    }
-		factory = Persistence.createEntityManagerFactory("TraxQADS");
+		factory = Persistence.createEntityManagerFactory("TraxStandaloneDS");
 		em = factory.createEntityManager();
 	}
 	
@@ -97,7 +96,7 @@ public class Creation_Equipment_Data {
 	public String markTransaction(INT5_TRAX request) {
 		executed = "OK";
 		
-		String sqlUpdateWO = "UPDATE WO SET MOD_NO = ?, INTERFACE_SAP_TRANSFERRED_DATE = SYSDATE, INTERFACE_SAP_TRANSFERRED_FLAG = 'Y' WHERE INTERFACE_SAP_TRANSFERRED_FLAG IS NULL and WO = ?";
+		String sqlUpdateWO = "UPDATE WO SET MOD_NO = ?, INTERFACE_ESD_TRANSFERRED_DATE = SYSDATE, INTERFACE_ESD_TRANSFERRED_FLAG = 'Y' WHERE INTERFACE_ESD_TRANSFERRED_FLAG IS NULL and WO = ?";
 		
 		try {
 			PreparedStatement pstmt1 = con.prepareStatement(sqlUpdateWO);
@@ -141,19 +140,18 @@ public class Creation_Equipment_Data {
 	    }
 		
 		ArrayList<INT5_SND> list = new ArrayList<INT5_SND>();
-		ArrayList<OrderSND> orlist = new ArrayList<OrderSND>();
 		
-		String sqlWorkOrder = "SELECT W.WO, W.LOCATION, W.WO_DESCRIPTION, WS.PN, WS.PN_SN, W.SCHEDULE_START_DATE, \r\n" +
-				"W.SCHEDULE_COMPLETION_DATE, P.ENGINE, W.CREATED_BY, W.THIRD_PARTY_WO, S.PARTY, CASE \r\n" +
+		String sqlWorkOrder = "SELECT W.WO, W.LOCATION, W.WO_DESCRIPTION, WS.PN, WS.PN_SN, TO_CHAR(W.SCHEDULE_START_DATE, 'DD-MM-YYYY') AS SCHEDULE_START_DATE, \r\n" +
+				"TO_CHAR(W.SCHEDULE_COMPLETION_DATE, 'DD-MM-YYYY') AS SCHEDULE_COMPLETION_DATE, P.ENGINE, W.CUSTOMER, W.THIRD_PARTY_WO, S.PARTY, CASE \r\n" +
 				"WHEN S.PARTY = '1P' AND (W.THIRD_PARTY_WO = 'N' OR W.THIRD_PARTY_WO IS NULL) THEN 'N' \r\n" +
 				"WHEN S.PARTY = '3P' AND W.THIRD_PARTY_WO = 'Y' THEN 'Y' WHEN S.PARTY = '1P' THEN 'N' \r\n" +
 				"WHEN S.PARTY = '3P' THEN 'Y' ELSE NULL END AS THIRD_PARTY_FLAG FROM WO W \r\n" +
 				"JOIN SYSTEM_TRAN_CODE S ON W.SOURCE_TYPE = S.SYSTEM_CODE \r\n" +
 				"JOIN WO_SHOP_DETAIL WS ON W.WO = WS.WO \r\n" +
 				"JOIN PN_MASTER P ON WS.PN = P.PN WHERE W.SOURCE_TYPE IS NOT NULL \r\n" +
-				"AND S.SYSTEM_TRANSACTION = 'SOURCETYPE' AND W.INTERFACE_SAP_TRANSFERRED_FLAG IS NULL AND W.INTERFACE_SAP_TRANSFERRED_DATE IS NULL AND W.STATUS = 'CONF SLOT'";
+				"AND S.SYSTEM_TRANSACTION = 'SOURCETYPE' AND W.INTERFACE_ESD_TRANSFERRED_FLAG IS NULL AND W.INTERFACE_ESD_TRANSFERRED_DATE IS NULL AND W.STATUS = 'CONF SLOT'";
 		
-		String sqlMark = "UPDATE WO SET INTERFACE_SAP_TRANSFERRED_DATE = SYSDATE WHERE WO = ?";
+		String sqlMark = "UPDATE WO SET INTERFACE_ESD_TRANSFERRED_DATE = SYSDATE WHERE WO = ?";
 		
 		if (MaxRecord != null && !MaxRecord.isEmpty()) {
 			sqlWorkOrder = "SELECT * FROM (" + sqlWorkOrder;
@@ -181,39 +179,43 @@ public class Creation_Equipment_Data {
 				while(rs1.next()) {
 					logger.info("Processiong WO: " + rs1.getString(1) + ", WO Description: " + rs1.getString(3) + ", Location: " + rs1.getString(2));
 					INT5_SND req = new INT5_SND();
-					orlist = new ArrayList<OrderSND>();
-		    		 req.setOrder(orlist);
-		    		 OrderSND Inbound = new OrderSND();
+					
 		    		 
 					if (rs1.getString(1) != null && !rs1.getNString(1).isEmpty()) {
-						Inbound.setTraxWo(rs1.getString(1));
-						Inbound.setTcDescription(rs1.getString(3));
-						Inbound.setLocationWO(rs1.getString(2));
+						req.setTraxWo(rs1.getString(1));
+						req.setLocationWO(rs1.getString(2));
 					} 
+					
+					if (rs1.getString(3) != null) {
+						req.setTcDescription(rs1.getString(3));
+					} else {
+						req.setTcDescription("");
+					}
+					
+					
 					
 					logger.info("WO Scheduled Start Date: " + rs1.getString(6) + ", WO Scheduled Completion Date: " + rs1.getString(7) + ", Employee: " + rs1.getString(9));
 					
-					Inbound.setStartDate(rs1.getString(6));
-					Inbound.setEndDate(rs1.getString(7));
-					Inbound.setCustomerID(rs1.getString(9));
+					req.setStartDate(rs1.getString(6));
+					req.setEndDate(rs1.getString(7));
+					req.setCustomerID(rs1.getString(9));
 					
 					if (rs1.getString(8) != null && !rs1.getNString(8).isEmpty()) {
-						Inbound.setTechControl(rs1.getString(8));
+						req.setTechControl(rs1.getString(8));
 					}
 					
-					Inbound.setPflag(rs1.getString(12));
+					req.setPflag(rs1.getString(12));
 					
 					logger.info("PN: " + rs1.getString(4) + ", SN: " + rs1.getString(5));
 					
 					if (rs1.getString(4) != null && !rs1.getNString(4).isEmpty()) {
-						Inbound.setPn(rs1.getString(4));
-						Inbound.setPnSn(rs1.getString(5));
+						req.setPn(rs1.getString(4));
+						req.setPnSn(rs1.getString(5));
 					}
 					
-					req.getOrder().add(Inbound);
 					list.add(req);
 					
-					pstmt2.setString(1, Inbound.getTraxWo());
+					pstmt2.setString(1, req.getTraxWo());
 					pstmt2.executeQuery();
 				}
 			}

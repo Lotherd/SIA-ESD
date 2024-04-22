@@ -21,11 +21,11 @@ static Logger logger = LogManager.getLogger("CreationSales");
 			
 			DataSource ds = null;
 			
-			if(System.getProperty("jboss.serve.config.dir") != null) ds = (DataSource) ctx.lookup("java:/TraxQADS");
-			else ds = (DataSource) ctx.lookup("TraxQADS");
+			if(System.getProperty("jboss.serve.config.dir") != null) ds = (DataSource) ctx.lookup("java:/TraxStandaloneDS");
+			else ds = (DataSource) ctx.lookup("TraxStandaloneDS");
 			connection = ds.getConnection();
 		} catch (Exception e) {
-			logger.severe("An error ocurred trying connect to the DataSource: TraxQADS");
+			logger.severe("An error ocurred trying connect to the DataSource: TraxStandaloneDS");
 			throw new Exception(
 					"\nGetting error trying to connect to the datasource. " +
 					"\n error: " +

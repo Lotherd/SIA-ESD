@@ -19,7 +19,7 @@ public class OrderComponentSND implements Comparable<OrderComponentSND>{
 	@XmlElement(name = "Quantity")
 	private String Quantity;
 	
-	@XmlElement(name = "ACT")
+	@XmlElement(name = "OPS_NO")
 	private String ACT;
 	
 	@XmlElement(name = "Goods_Recipient")
@@ -28,7 +28,7 @@ public class OrderComponentSND implements Comparable<OrderComponentSND>{
 	@XmlElement(name = "Requisition")
 	private String requisition;
 	
-	@XmlElement(name = "Requisiton_Line")
+	@XmlElement(name = "Requisition_Line")
 	private String requisitionLine;
 	
 	@XmlElement(name = "TRAX_WO_Location")

@@ -36,8 +36,8 @@ public class Run implements Runnable{
 			
 			if(!ArrayReq.isEmpty()) {
 				for (INT5_SND ArrayRequest : ArrayReq) {
-					if (!ArrayRequest.getOrder().isEmpty()) {
-					logger.info("RUN INFO " + ArrayRequest.getOrder().get(0).getTraxWo());
+					if (!ArrayRequest.getTraxWo().isEmpty()) {
+					logger.info("RUN INFO " + ArrayRequest.getTraxWo());
 				
 				}else {
                     logger.info("RUN INFO: Order list is empty");
@@ -48,6 +48,7 @@ public class Run implements Runnable{
 				
 				StringWriter sw = new StringWriter();
 				marshaller.marshal(ArrayRequest, sw);
+				
 				
 				logger.info("Output: " + sw.toString());
 

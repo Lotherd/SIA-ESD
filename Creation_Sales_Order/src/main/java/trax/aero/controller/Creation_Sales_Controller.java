@@ -28,7 +28,7 @@ public class Creation_Sales_Controller {
 	static String toEmail = System.getProperty("Sales_Creation_toEmail");
 
 	public Creation_Sales_Controller() {
-		factory = Persistence.createEntityManagerFactory("TraxQADS");
+		factory = Persistence.createEntityManagerFactory("TraxStandaloneDS");
 		factory.createEntityManager();
 	}
 	
@@ -49,11 +49,10 @@ public class Creation_Sales_Controller {
 		try {
 			String requests = "";
 			for (INT7_SND or: arrayReq) {
-				for(OrderSND r: or.getOrder()) {
-					String WO = r.getTraxWo();
-				requests = requests + " (WO Number: " + WO + ", Location: " + r.getLocationWO() + ", WO Description: " + r.getTcDescription() + "),";
+					String WO = or.getTraxWo();
+				requests = requests + " (WO Number: " + WO + ", Location: " + or.getLocationWO() + ", WO Description: " + or.getTcDescription() + "),";
 			}
-			}
+		
 			ArrayList <String> emailsList = new ArrayList <> (Arrays.asList(toEmail.split(",")));
 			Email email = new SimpleEmail();
 			email.setHostName(host);

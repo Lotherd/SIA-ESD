@@ -132,15 +132,20 @@ public class Import_TC_MHR_Data {
 		                    pstmt2.setString(2, r.getWo());
 		                    pstmt2.executeUpdate();
 		                    
-		                    pstmt3.setString(1, o.getTaskCard());
-		                    pstmt3.setString(2, r.getWo());
-		                    pstmt3.executeUpdate();
+		                  
 
 		                    if (o.getOpsNo() != null && !o.getOpsNo().isEmpty()) {
 		                        pstmt3.setString(1, o.getOpsNo());
 		                        pstmt3.setString(2, o.getTaskCard());
 		                        pstmt3.setString(3, r.getWo());
 		                        pstmt3.executeUpdate();
+		                    }
+		                    
+		                    if (o.getOpsNo() != null && !o.getOpsNo().isEmpty()) {
+		                        pstmt4.setString(1, o.getOpsNo());
+		                        pstmt4.setString(2, o.getTaskCard());
+		                        pstmt4.setString(3, r.getWo());
+		                        pstmt4.executeUpdate();
 		                    }
 
 		                    if (!r.getExceptionId().equalsIgnoreCase("53")) {

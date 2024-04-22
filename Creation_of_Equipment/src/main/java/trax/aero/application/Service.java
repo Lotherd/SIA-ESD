@@ -34,7 +34,6 @@ public class Service {
 		return Response.ok("Healthy", MediaType.TEXT_PLAIN).build();
 	}
 	
-	
 	@GET
 	@Path("/setOpsLine")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -92,6 +91,7 @@ public class Service {
 		
 		return Response.ok(executed,MediaType.APPLICATION_JSON).build();
 	}
+
 	
 	@GET
 	@Path("/getEmail")
